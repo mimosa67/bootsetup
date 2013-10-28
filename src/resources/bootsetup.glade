@@ -19,7 +19,7 @@
     <property name="program_name">BootSetup</property>
     <property name="version">0.1</property>
     <property name="copyright" translatable="yes">Copyright © 2013-2014 Cyrille Pontvieux</property>
-    <property name="comments" translatable="yes">A simple GUI to set up LILO.</property>
+    <property name="comments" translatable="yes">Helps setup a bootloader like LiLo or Grub2.</property>
     <property name="website">http://salixos.org</property>
     <property name="website_label">Salix OS</property>
     <property name="license" translatable="yes">This program is free software; you can redistribute it 
@@ -83,6 +83,12 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
       </row>
       <row>
         <col id="0" translatable="yes">Linux</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Arch Linux</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Debian</col>
       </row>
       <row>
         <col id="0" translatable="yes">Fedora</col>
@@ -269,7 +275,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                           <object class="GtkLabel" id="execute_label">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes"> _Install bootloader </property>
+                            <property name="label" translatable="yes">_Install bootloader</property>
                             <property name="use_underline">True</property>
                           </object>
                           <packing>
@@ -513,7 +519,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                                   <object class="GtkLabel" id="undo_label">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">_Undo configuration </property>
+                                    <property name="label" translatable="yes">_Undo configuration</property>
                                     <property name="use_markup">True</property>
                                     <property name="use_underline">True</property>
                                   </object>
@@ -568,7 +574,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                                   <object class="GtkLabel" id="edit_label">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">_Edit configuration </property>
+                                    <property name="label" translatable="yes">_Edit configuration</property>
                                     <property name="use_markup">True</property>
                                     <property name="use_underline">True</property>
                                   </object>

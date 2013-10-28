@@ -7,9 +7,9 @@ pkgname=bootsetup
 pkgver=0.1dev
 pkgrel=1cp
 arch=noarch
-source=(https://github.com/Salix-OS/$pkgname/archive/$pkgver.tar.gz)
+source=(http://git.enialis.net/download/$pkgname/$pkgname-$pkgver.tar.gz)
 sourcetemplate=http://people.salixos.org/jrd/salix/$pkgname-\$arch-$pkgver/
-url=http://salixos.org
+url=http://git.enialis.net/info/$pkgname
 
 slackdesc=\
 (
