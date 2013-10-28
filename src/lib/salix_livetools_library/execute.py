@@ -40,7 +40,8 @@ def execGetOutput(cmd, withError = False, shell = True, env = {'LANG' : 'en_US'}
   In case of error, it returns a subprocess.CalledProcessorError exception.
   The command is executed by default in a /bin/sh shell with en_US locale.
   """
-  stdErr = None
+  DEVNULL = open(os.devnull, 'wb')
+  stdErr = DEVNULL
   if withError:
     stdErr = subprocess.STDOUT
   if sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 7): # ver >= 2.7

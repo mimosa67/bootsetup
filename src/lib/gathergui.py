@@ -22,9 +22,14 @@ class GatherGui:
   """
   GUI to gather information about the configuration to setup.
   """
-  def __init__(self, version, is_test = False, use_test_data = False):
-    print "Init, Lilo by default"
-    self.cfg = Config('lilo', is_test, use_test_data)
+  def __init__(self, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
+    self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
+    print self.cfg.cur_bootloader
+    print self.cfg.cur_boot_partition
+    print self.cfg.cur_mbr_device
+    print self.cfg.disks
+    print self.cfg.partitions
+    print self.cfg.boot_partitions
     builder = gtk.Builder()
     for d in ('./resources', '../resources'):
       if os.path.exists(d + '/bootsetup.glade'):

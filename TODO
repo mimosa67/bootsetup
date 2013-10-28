@@ -2,13 +2,13 @@
   TODO List
   =========
 
-[_] Déterminer la liste des disques potentiels.
-[_] Déterminer le disque le plus à même de recevoir le bootloader.
-[_] Détermine la partition qui va contenir les fichiers du bootloader (lilo.conf ou boot/grub)
+[X] Déterminer la liste des disques potentiels.
+[X] Déterminer le disque le plus à même de recevoir le bootloader.
+[X] Détermine la partition qui va contenir les fichiers du bootloader (lilo.conf ou boot/grub)
 [_] Cacher/Afficher les infos du boot LiLo si LiLo est sélectionné ou non.
 [_] Pour LiLo :
-  [_] Déterminer les partitions "bootables" du système.
-  [_] Déterminer le système de fichier, l'OS et le label par défaut pour ces partitions.
+  [X] Déterminer les partitions "bootables" du système.
+  [X] Déterminer le système de fichier, l'OS et le label par défaut pour ces partitions.
   [_] Déterminer la façon de booter (image Linux+initrd éventuel ou chainloading).
     [_] Déterminer les options de boot Linux, par exemple rootfstype=ext4 si besoin.
   [_] Trouver l'UUID du disque pour le passer en option plutôt qu'un nommage ordonné des disques.
