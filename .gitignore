@@ -1,0 +1,10 @@
+*.pyc
+*.mo
+*.log
+*.txz
+*.md5
+*.dep
+*.sug
+*.con
+data/locale
+build
