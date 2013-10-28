@@ -148,7 +148,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
       </row>
       <row>
         <col id="0" translatable="yes">/dev/sda3</col>
-        <col id="1" translatable="yes">/dev/sdb1</col>
+        <col id="1" translatable="yes">ext4</col>
         <col id="2" translatable="yes">Slackware</col>
         <col id="3" translatable="yes">Salix</col>
         <col id="4" translatable="yes">gtk-yes</col>
@@ -246,7 +246,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <property name="receives_default">False</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
-                <property name="group">radiobutton_grub2</property>
+                <signal name="activate" handler="on_radiobutton_lilo_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -263,6 +263,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <property name="receives_default">False</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">radiobutton_lilo</property>
+                <signal name="activate" handler="on_radiobutton_grub2_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
