@@ -1,0 +1,25 @@
+# vim: set syn=sh et ai sta sw=2 ts=2 tw=0:
+#Packager: JRD <jrd@enialis.net>
+#dep: btrfs-progs,coreutils,dosfstools,e2fsprogs,file,findutils,glibc,grep,jfsutils,ntfsprogs|ntfs-3g,python,reiserfsprogs,salixtools,shadow,spkg,util-linux,xfsprogs
+#sug: bootsetup|lilosetup,gparted,grub2,lilo,pygtk
+
+pkgname=bootsetup
+pkgver=0.1dev
+pkgrel=1cp
+arch=noarch
+source=(https://github.com/Salix-OS/$pkgname/archive/$pkgver.tar.gz)
+sourcetemplate=http://people.salixos.org/jrd/salix/$pkgname-\$arch-$pkgver/
+url=http://salixos.org
+
+slackdesc=\
+(
+#|-----handy-ruler------------------------------------------------------|
+"$pkgname (Install LiLo or Grub2)"
+"BootSetup helps installing a bootloader, either LiLo or Grub2."
+)
+
+build() {
+  cd $SRC/$pkgname-$pkgver
+  ./compile.sh
+  DESTDIR=$PKG ./install.sh
+}

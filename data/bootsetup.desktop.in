@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+GenericName=BootSetup
+_Name=BootSetup
+_Comment=Install a bootloader, LiLo or Grub2
+Exec=xsu /usr/sbin/bootsetup
+Icon=bootsetup
+Terminal=false
+StartupNotify=true
+NoDisplay=false
+Categories=Application;System;
