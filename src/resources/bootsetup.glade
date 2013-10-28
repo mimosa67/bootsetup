@@ -66,6 +66,23 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
       </object>
     </child>
   </object>
+  <object class="GtkListStore" id="boot_disk_list_store">
+    <columns>
+      <!-- column-name disk -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">/dev/sda</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/sdb</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">/dev/sdd</col>
+      </row>
+    </data>
+  </object>
   <object class="GtkListStore" id="boot_label_list_store">
     <columns>
       <!-- column-name label -->
@@ -157,10 +174,10 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="about_button">
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="relief">none</property>
                 <signal name="leave-notify-event" handler="on_about_button_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_about_button_enter_notify_event" swapped="no"/>
@@ -215,25 +232,21 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
           </packing>
         </child>
         <child>
-          <object class="GtkHButtonBox" id="hbuttonbox_final">
+          <object class="GtkHButtonBox" id="hbuttonbox_type">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="homogeneous">True</property>
-            <property name="layout_style">edge</property>
+            <property name="spacing">100</property>
+            <property name="layout_style">center</property>
             <child>
-              <object class="GtkButton" id="button_quit">
-                <property name="label">gtk-quit</property>
+              <object class="GtkRadioButton" id="radiobutton_lilo">
+                <property name="label">LiLo</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="has_focus">True</property>
-                <property name="can_default">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
-                <property name="use_stock">True</property>
-                <signal name="leave-notify-event" handler="on_button_quit_leave_notify_event" swapped="no"/>
-                <signal name="enter-notify-event" handler="on_button_quit_enter_notify_event" swapped="no"/>
-                <signal name="clicked" handler="on_main_window_destroy" swapped="no"/>
-                <signal name="clicked" handler="gtk_main_quit" swapped="no"/>
+                <property name="receives_default">False</property>
+                <property name="active">True</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">radiobutton_grub2</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -242,52 +255,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEventBox" id="execute_eventbox">
+              <object class="GtkRadioButton" id="radiobutton_grub2">
+                <property name="label">Grub2</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <signal name="leave-notify-event" handler="on_execute_eventbox_leave_notify_event" swapped="no"/>
-                <signal name="enter-notify-event" handler="on_execute_eventbox_enter_notify_event" swapped="no"/>
-                <child>
-                  <object class="GtkButton" id="execute_button">
-                    <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
-                    <signal name="clicked" handler="on_execute_button_clicked" swapped="no"/>
-                    <child>
-                      <object class="GtkHBox" id="hbox2">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <child>
-                          <object class="GtkImage" id="image2">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="stock">gtk-execute</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="execute_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">_Install bootloader</property>
-                            <property name="use_underline">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                </child>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">radiobutton_lilo</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -299,13 +274,48 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="padding">10</property>
-            <property name="pack_type">end</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <object class="GtkFrame" id="frame1">
+          <object class="GtkHBox" id="hbox_mbr">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="label_mbr">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Install it on:</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="combobox_mbr">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="model">boot_disk_list_store</property>
+                <property name="has_entry">True</property>
+                <property name="entry_text_column">0</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkFrame" id="frame_lilo">
             <property name="width_request">660</property>
             <property name="height_request">220</property>
             <property name="visible">True</property>
@@ -415,11 +425,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <signal name="leave-notify-event" handler="on_up_eventbox_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="up_button">
+                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_up_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image5">
@@ -445,11 +455,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <signal name="leave-notify-event" handler="on_down_eventbox_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="down_button">
+                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_down_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image3">
@@ -493,11 +503,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                         <signal name="enter-notify-event" handler="on_undo_eventbox_enter_notify_event" swapped="no"/>
                         <child>
                           <object class="GtkButton" id="undo_button">
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <signal name="clicked" handler="on_undo_button_clicked" swapped="no"/>
                             <child>
                               <object class="GtkHBox" id="hbox4">
@@ -507,7 +517,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                                   <object class="GtkImage" id="image4">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="stock">gtk-clear</property>
+                                    <property name="stock">gtk-revert-to-saved</property>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
@@ -548,11 +558,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                         <signal name="enter-notify-event" handler="on_edit_eventbox_enter_notify_event" swapped="no"/>
                         <child>
                           <object class="GtkButton" id="edit_button">
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <signal name="clicked" handler="on_edit_button_clicked" swapped="no"/>
                             <child>
                               <object class="GtkHBox" id="hbox1">
@@ -604,14 +614,101 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 </child>
               </object>
             </child>
-            <child type="label_item">
-              <placeholder/>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHButtonBox" id="hbuttonbox_final">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
+            <property name="layout_style">edge</property>
+            <child>
+              <object class="GtkButton" id="button_quit">
+                <property name="label">gtk-quit</property>
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="has_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="leave-notify-event" handler="on_button_quit_leave_notify_event" swapped="no"/>
+                <signal name="enter-notify-event" handler="on_button_quit_enter_notify_event" swapped="no"/>
+                <signal name="clicked" handler="on_main_window_destroy" swapped="no"/>
+                <signal name="clicked" handler="gtk_main_quit" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEventBox" id="execute_eventbox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <signal name="leave-notify-event" handler="on_execute_eventbox_leave_notify_event" swapped="no"/>
+                <signal name="enter-notify-event" handler="on_execute_eventbox_enter_notify_event" swapped="no"/>
+                <child>
+                  <object class="GtkButton" id="execute_button">
+                    <property name="use_action_appearance">False</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_execute_button_clicked" swapped="no"/>
+                    <child>
+                      <object class="GtkHBox" id="hbox2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkImage" id="image2">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="stock">gtk-harddisk</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="execute_label">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Install bootloader</property>
+                            <property name="use_underline">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
             </child>
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="padding">10</property>
+            <property name="pack_type">end</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>
