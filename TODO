@@ -1,0 +1,24 @@
+
+  TODO List
+  =========
+
+[_] Déterminer la liste des disques potentiels.
+[_] Déterminer le disque le plus à même de recevoir le bootloader.
+[_] Détermine la partition qui va contenir les fichiers du bootloader (lilo.conf ou boot/grub)
+[_] Cacher/Afficher les infos du boot LiLo si LiLo est sélectionné ou non.
+[_] Pour LiLo :
+  [_] Déterminer les partitions "bootables" du système.
+  [_] Déterminer le système de fichier, l'OS et le label par défaut pour ces partitions.
+  [_] Déterminer la façon de booter (image Linux+initrd éventuel ou chainloading).
+    [_] Déterminer les options de boot Linux, par exemple rootfstype=ext4 si besoin.
+  [_] Trouver l'UUID du disque pour le passer en option plutôt qu'un nommage ordonné des disques.
+  [_] Écrire le fichier lilo.conf à utiliser pour l'installation.
+  [_] Monter les partitions.
+  [_] Installer LiLo.
+  [_] Démonter les partitions.
+[_] Pour Grub2 :
+  [_] Déterminer si le « post-MBR gab » est suffisant pour installer Grub2.
+    [_] Sinon prévoir d'installer un MBR qui utilise une « block list » sur « core.img ».
+  [_] Copier les fichiers de Grub2 sur la partition cible
+  [_] Installer Grub2.
+  [_] Construire la configuration et le menu en chrootant sur la partition cible et en lançant « udpate-grub ».

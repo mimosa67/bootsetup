@@ -12,7 +12,7 @@ import gtk
 import gtk.glade
 import os
 from common import *
-#from gathergui import *
+from gathergui import *
 
 def run_setup(app_name, locale_dir, version, is_test, use_test_data):
   gettext.install(app_name, locale_dir, True)
@@ -21,9 +21,8 @@ def run_setup(app_name, locale_dir, version, is_test, use_test_data):
   if not is_test and os.getuid() != 0:
     error_dialog(_("Root privileges are required to run this program."), _("Sorry!"))
     sys.exit(1)
-  sys.exit(0)
-  #GatherGui(version, is_test, use_test_data)
+  GatherGui(version, is_test, use_test_data)
   # indicates to gtk (and gdk) that we will use threads
-  #gtk.gdk.threads_init()
+  gtk.gdk.threads_init()
   # start the main gtk loop
-  #gtk.main()
+  gtk.main()
