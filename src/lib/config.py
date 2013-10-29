@@ -43,7 +43,7 @@ class Config:
           ]
       self.boot_partitions = [
             ['sda5', 'ext2', 'linux', 'Salix', 'Salix 14.0'],
-            ['sda1', 'ntfs', 'chain', 'Windows' 'Vista'],
+            ['sda1', 'ntfs', 'chain', 'Windows', 'Vista'],
             ['sdb2', 'ext4', 'linux', 'Debian', 'Debian 7']
           ]
       if not self.cur_boot_partition:

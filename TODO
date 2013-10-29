@@ -5,7 +5,7 @@
 [X] Déterminer la liste des disques potentiels.
 [X] Déterminer le disque le plus à même de recevoir le bootloader.
 [X] Détermine la partition qui va contenir les fichiers du bootloader (lilo.conf ou boot/grub)
-[_] Cacher/Afficher les infos du boot LiLo si LiLo est sélectionné ou non.
+[X] Cacher/Afficher les infos du boot LiLo si LiLo est sélectionné ou non.
 [_] Pour LiLo :
   [X] Déterminer les partitions "bootables" du système.
   [X] Déterminer le système de fichier, l'OS et le label par défaut pour ces partitions.

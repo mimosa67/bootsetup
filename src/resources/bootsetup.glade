@@ -2,123 +2,7 @@
 <interface>
   <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkAboutDialog" id="about_dialog">
-    <property name="can_focus">True</property>
-    <property name="has_focus">True</property>
-    <property name="is_focus">True</property>
-    <property name="border_width">5</property>
-    <property name="title" translatable="yes">About BootSetup</property>
-    <property name="resizable">False</property>
-    <property name="modal">True</property>
-    <property name="window_position">center-on-parent</property>
-    <property name="destroy_with_parent">True</property>
-    <property name="icon_name">help-about</property>
-    <property name="type_hint">normal</property>
-    <property name="skip_taskbar_hint">True</property>
-    <property name="transient_for">bootsetup_main</property>
-    <property name="program_name">BootSetup</property>
-    <property name="version">0.1</property>
-    <property name="copyright">Copyright © 2013-2014 Salix OS</property>
-    <property name="comments" translatable="yes">Helps setup a bootloader like LiLo or Grub2.</property>
-    <property name="website">http://salixos.org</property>
-    <property name="website_label">Salix OS</property>
-    <property name="license">This program is free software; you can redistribute it 
-and/or modify it under the terms of the GNU General
-Public License as published by the Free Software 
-Foundation; either version 2 of the License, or (at your 
-option) any later version.
-
-This program is distributed in the hope that it will be 
-useful, but WITHOUT ANY WARRANTY; without even
-the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU General 
-Public License for more details.
-
-You should have received a copy of the GNU General 
-Public License along with this program; if not, write to 
-the Free Software Foundation, Inc., 51 Franklin Street, 
-Fifth Floor, Boston, MA 02110-1301, USA.</property>
-    <property name="authors">Cyrille Pontvieux &lt;jrd~at~enialis~dot~net&gt;
-Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
-    <property name="documenters"></property>
-    <property name="translator_credits" translatable="yes" comments="Define your name and email here.">translator_name &lt;translator@email.com&gt;</property>
-    <property name="logo">bootsetup.png</property>
-    <signal name="delete-event" handler="on_about_dialog_close" swapped="no"/>
-    <signal name="response" handler="on_about_dialog_close" swapped="no"/>
-    <child internal-child="vbox">
-      <object class="GtkVBox" id="dialog-vbox2">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area2">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
-  <object class="GtkListStore" id="boot_disk_list_store">
-    <columns>
-      <!-- column-name disk -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">/dev/sda</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">/dev/sdb</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">/dev/sdd</col>
-      </row>
-    </data>
-  </object>
-  <object class="GtkListStore" id="boot_label_list_store">
-    <columns>
-      <!-- column-name label -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0" translatable="yes">Set...</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Salix</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Slackware</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Linux</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Arch Linux</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Debian</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Fedora</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Ubuntu</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">Windows</col>
-      </row>
-    </data>
-  </object>
-  <object class="GtkListStore" id="boot_partition_list_store">
+  <object class="GtkListStore" id="boot_bootpartition_list_store">
     <columns>
       <!-- column-name partition -->
       <column type="gchararray"/>
@@ -133,25 +17,109 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">/dev/sda1</col>
-        <col id="1" translatable="yes">fat32</col>
-        <col id="2" translatable="yes">Windows</col>
-        <col id="3" translatable="yes">XP</col>
-        <col id="4" translatable="yes">gtk-no</col>
+        <col id="0">sda1</col>
+        <col id="1">fat32</col>
+        <col id="2">Windows</col>
+        <col id="3">XP</col>
+        <col id="4">gtk-no</col>
       </row>
       <row>
-        <col id="0" translatable="yes">/dev/sda2</col>
-        <col id="1" translatable="yes">ntfs</col>
-        <col id="2" translatable="yes">Windows</col>
-        <col id="3" translatable="yes">Vista</col>
-        <col id="4" translatable="yes">gtk-no</col>
+        <col id="0">sda2</col>
+        <col id="1">ntfs</col>
+        <col id="2">Windows</col>
+        <col id="3">Vista</col>
+        <col id="4">gtk-no</col>
       </row>
       <row>
-        <col id="0" translatable="yes">/dev/sda3</col>
-        <col id="1" translatable="yes">ext4</col>
-        <col id="2" translatable="yes">Slackware</col>
-        <col id="3" translatable="yes">Salix</col>
-        <col id="4" translatable="yes">gtk-yes</col>
+        <col id="0">sda3</col>
+        <col id="1">ext4</col>
+        <col id="2">Slackware</col>
+        <col id="3">Salix</col>
+        <col id="4">gtk-yes</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="boot_disk_list_store">
+    <columns>
+      <!-- column-name disk -->
+      <column type="gchararray"/>
+      <!-- column-name info -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0">sda</col>
+        <col id="1">WDC100 (100GB)</col>
+      </row>
+      <row>
+        <col id="0">sdb</col>
+        <col id="1">SGT350 (350GB)</col>
+      </row>
+      <row>
+        <col id="0">sdd</col>
+        <col id="1">WDC800 (800GB)</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="boot_label_list_store">
+    <columns>
+      <!-- column-name label -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0">Set...</col>
+      </row>
+      <row>
+        <col id="0">Salix</col>
+      </row>
+      <row>
+        <col id="0">Slackware</col>
+      </row>
+      <row>
+        <col id="0">Linux</col>
+      </row>
+      <row>
+        <col id="0">Arch Linux</col>
+      </row>
+      <row>
+        <col id="0">Debian</col>
+      </row>
+      <row>
+        <col id="0">Fedora</col>
+      </row>
+      <row>
+        <col id="0">Ubuntu</col>
+      </row>
+      <row>
+        <col id="0">Windows</col>
+      </row>
+    </data>
+  </object>
+  <object class="GtkListStore" id="boot_partition_list_store">
+    <columns>
+      <!-- column-name partition -->
+      <column type="gchararray"/>
+      <!-- column-name filesystem -->
+      <column type="gchararray"/>
+      <!-- column-name label -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0">sda1</col>
+        <col id="1">fat32</col>
+        <col id="2">Windows XP</col>
+      </row>
+      <row>
+        <col id="0">sda2</col>
+        <col id="1">ntfs</col>
+        <col id="2">Windows Vista</col>
+      </row>
+      <row>
+        <col id="0">sda3</col>
+        <col id="1">ext4</col>
+        <col id="2">Salix</col>
       </row>
     </data>
   </object>
@@ -174,10 +142,10 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="about_button">
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="relief">none</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_about_button_enter_notify_event" swapped="no"/>
@@ -238,14 +206,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkRadioButton" id="radiobutton_lilo">
                 <property name="label">LiLo</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
-                <signal name="activate" handler="on_radiobutton_lilo_activate" swapped="no"/>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
+                <signal name="clicked" handler="on_bootloader_type_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -256,14 +224,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkRadioButton" id="radiobutton_grub2">
                 <property name="label">Grub2</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">radiobutton_lilo</property>
-                <signal name="activate" handler="on_radiobutton_grub2_activate" swapped="no"/>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
+                <signal name="clicked" handler="on_bootloader_type_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -286,7 +254,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               <object class="GtkLabel" id="label_mbr">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Install it on:</property>
+                <property name="xalign">1</property>
+                <property name="xpad">10</property>
+                <property name="label" translatable="yes">Install bootloader on:</property>
+                <property name="justify">fill</property>
+                <property name="ellipsize">start</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
               </object>
               <packing>
@@ -302,6 +274,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <property name="model">boot_disk_list_store</property>
                 <property name="has_entry">True</property>
                 <property name="entry_text_column">0</property>
+                <signal name="changed" handler="on_combobox_mbr_changed" swapped="no"/>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
               </object>
               <packing>
@@ -312,8 +285,8 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             </child>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
             <property name="position">2</property>
           </packing>
         </child>
@@ -342,7 +315,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                           <object class="GtkTreeView" id="boot_partition_treeview">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="model">boot_partition_list_store</property>
+                            <property name="model">boot_bootpartition_list_store</property>
                             <property name="headers_clickable">False</property>
                             <property name="rules_hint">True</property>
                             <property name="search_column">0</property>
@@ -428,11 +401,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="up_button">
+                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_up_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image5">
@@ -458,11 +431,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="down_button">
+                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_down_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image3">
@@ -506,11 +479,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                         <signal name="enter-notify-event" handler="on_undo_eventbox_enter_notify_event" swapped="no"/>
                         <child>
                           <object class="GtkButton" id="undo_button">
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <signal name="clicked" handler="on_undo_button_clicked" swapped="no"/>
                             <child>
                               <object class="GtkHBox" id="hbox4">
@@ -561,11 +534,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                         <signal name="enter-notify-event" handler="on_edit_eventbox_enter_notify_event" swapped="no"/>
                         <child>
                           <object class="GtkButton" id="edit_button">
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <signal name="clicked" handler="on_edit_button_clicked" swapped="no"/>
                             <child>
                               <object class="GtkHBox" id="hbox1">
@@ -625,6 +598,47 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
           </packing>
         </child>
         <child>
+          <object class="GtkHBox" id="hbox_grub2">
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="label_partition">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">1</property>
+                <property name="xpad">10</property>
+                <property name="label" translatable="yes">Install Grub2 files on:</property>
+                <property name="justify">fill</property>
+                <property name="ellipsize">start</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBox" id="combobox_partition">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="model">boot_partition_list_store</property>
+                <property name="has_entry">True</property>
+                <property name="entry_text_column">0</property>
+                <signal name="changed" handler="on_combobox_partition_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkHButtonBox" id="hbuttonbox_final">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -633,16 +647,15 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkButton" id="button_quit">
                 <property name="label">gtk-quit</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="has_focus">True</property>
                 <property name="can_default">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_button_quit_enter_notify_event" swapped="no"/>
-                <signal name="clicked" handler="on_main_window_destroy" swapped="no"/>
                 <signal name="clicked" handler="gtk_main_quit" swapped="no"/>
               </object>
               <packing>
@@ -659,11 +672,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <signal name="enter-notify-event" handler="on_execute_eventbox_enter_notify_event" swapped="no"/>
                 <child>
                   <object class="GtkButton" id="execute_button">
+                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                     <signal name="clicked" handler="on_execute_button_clicked" swapped="no"/>
                     <child>
                       <object class="GtkHBox" id="hbox2">
@@ -711,7 +724,71 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <property name="fill">True</property>
             <property name="padding">10</property>
             <property name="pack_type">end</property>
-            <property name="position">4</property>
+            <property name="position">5</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkAboutDialog" id="about_dialog">
+    <property name="can_focus">True</property>
+    <property name="has_focus">True</property>
+    <property name="is_focus">True</property>
+    <property name="border_width">5</property>
+    <property name="title" translatable="yes">About BootSetup</property>
+    <property name="resizable">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center-on-parent</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="icon_name">help-about</property>
+    <property name="type_hint">normal</property>
+    <property name="skip_taskbar_hint">True</property>
+    <property name="transient_for">bootsetup_main</property>
+    <property name="program_name">BootSetup</property>
+    <property name="version">0.1</property>
+    <property name="copyright">Copyright © 2013-2014 Salix OS</property>
+    <property name="comments" translatable="yes">Helps setup a bootloader like LiLo or Grub2.</property>
+    <property name="website">http://salixos.org</property>
+    <property name="website_label">Salix OS</property>
+    <property name="license">This program is free software; you can redistribute it 
+and/or modify it under the terms of the GNU General
+Public License as published by the Free Software 
+Foundation; either version 2 of the License, or (at your 
+option) any later version.
+
+This program is distributed in the hope that it will be 
+useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General 
+Public License for more details.
+
+You should have received a copy of the GNU General 
+Public License along with this program; if not, write to 
+the Free Software Foundation, Inc., 51 Franklin Street, 
+Fifth Floor, Boston, MA 02110-1301, USA.</property>
+    <property name="authors">Cyrille Pontvieux &lt;jrd~at~enialis~dot~net&gt;
+Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
+    <property name="documenters"></property>
+    <property name="translator_credits" translatable="yes" comments="Define your name and email here.">translator_name &lt;translator@email.com&gt;</property>
+    <property name="logo">bootsetup.png</property>
+    <signal name="delete-event" handler="on_about_dialog_close" swapped="no"/>
+    <signal name="response" handler="on_about_dialog_close" swapped="no"/>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </object>
