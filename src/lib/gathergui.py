@@ -48,11 +48,23 @@ boot partitions:{boot_partitions}
     self.ComboBoxMbr = builder.get_object("combobox_mbr")
     self._add_combobox_cell_renderer(self.ComboBoxMbr, 1)
     self.LiloPart = builder.get_object("frame_lilo")
+    self.BootPartitionTreeview = builder.get_object("boot_partition_treeview")
+    self.LabelCellRendererCombo = builder.get_object("label_cellrenderercombo")
+    self.PartitionTreeViewColumn = builder.get_object("partition_treeviewcolumn")
+    self.FileSystemTreeViewColumn = builder.get_object("filesystem_treeviewcolumn")
+    self.OsTreeViewColumn = builder.get_object("os_treeviewcolumn")
+    self.LabelTreeViewColumn = builder.get_object("label_treeviewcolumn")
+    self.UpButton = builder.get_object("up_button")
+    self.DownButton = builder.get_object("down_button")
+    self.UndoButton = builder.get_object("undo_button")
+    self.EditButton = builder.get_object("edit_button")
     self.Grub2Part = builder.get_object("hbox_grub2")
     self.ComboBoxPartition = builder.get_object("combobox_partition")
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 2)
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 1, padding=20)
-    print "TODO"
+    self.DiskListStore = builder.get_object("boot_disk_list_store")
+    self.PartitionListStore = builder.get_object("boot_partition_list_store")
+    self.BootPartitionListStore = builder.get_object("boot_bootpartition_list_store")
     # Initialize the contextual help box
     self.context_intro = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
@@ -65,7 +77,7 @@ a boot menu if several operating systems are available on the same computer.")
     self.add_custom_signals()
     builder.connect_signals(self)
 
-  def _add_combobox_cell_renderer(self, comboBox, modelPosition, start=False, expand=False, fill=True, padding=0):
+  def _add_combobox_cell_renderer(self, comboBox, modelPosition, start=False, expand=False, padding=0):
     cell = gtk.CellRendererText()
     cell.set_property('xalign', 0)
     cell.set_property('xpad', padding)
@@ -124,7 +136,21 @@ click on this button to install your bootloader."))
   def build_data_stores(self):
     print 'Building choice lists…',
     sys.stdout.flush()
-    print "TODO"
+    if self.cfg.cur_bootloader == 'lilo':
+      self.RadioLilo.activate()
+    elif self.cfg.cur_bootloader == 'grub2':
+      self.RadioGrub2.activate()
+    self.DiskListStore.clear()
+    self.PartitionListStore.clear()
+    self.BootPartitionListStore.clear()
+    for d in self.cfg.disks:
+      self.DiskListStore.append(d)
+    for p in self.cfg.partitions:
+      self.PartitionListStore.append(p)
+    for p in self.cfg.boot_partitions:
+      self.BootPartitionListStore.append(p)
+    #self.ComboBoxMbr.get_entry().set_text(self.cfg.cur_mbr_device)
+    #self.ComboBoxPartition.get_entry().set_text(self.cfg.cur_boot_partition)
     print ' Done'
     sys.stdout.flush()
 
