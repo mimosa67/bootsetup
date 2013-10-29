@@ -46,6 +46,7 @@ boot partitions:{boot_partitions}
     self.RadioLilo = builder.get_object("radiobutton_lilo")
     self.RadioGrub2 = builder.get_object("radiobutton_grub2")
     self.ComboBoxMbr = builder.get_object("combobox_mbr")
+    self.ComboBoxMbrEntry = builder.get_object("combobox_mbr_entry")
     self._add_combobox_cell_renderer(self.ComboBoxMbr, 1)
     self.LiloPart = builder.get_object("frame_lilo")
     self.BootPartitionTreeview = builder.get_object("boot_partition_treeview")
@@ -60,6 +61,7 @@ boot partitions:{boot_partitions}
     self.EditButton = builder.get_object("edit_button")
     self.Grub2Part = builder.get_object("hbox_grub2")
     self.ComboBoxPartition = builder.get_object("combobox_partition")
+    self.ComboBoxPartitionEntry = builder.get_object("combobox_partition_entry")
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 2)
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 1, padding=20)
     self.DiskListStore = builder.get_object("boot_disk_list_store")
@@ -149,8 +151,8 @@ click on this button to install your bootloader."))
       self.PartitionListStore.append(p)
     for p in self.cfg.boot_partitions:
       self.BootPartitionListStore.append(p)
-    #self.ComboBoxMbr.get_entry().set_text(self.cfg.cur_mbr_device)
-    #self.ComboBoxPartition.get_entry().set_text(self.cfg.cur_boot_partition)
+    self.ComboBoxMbrEntry.set_text(self.cfg.cur_mbr_device)
+    self.ComboBoxPartitionEntry.set_text(self.cfg.cur_boot_partition)
     print ' Done'
     sys.stdout.flush()
 
