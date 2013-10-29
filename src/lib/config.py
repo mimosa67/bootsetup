@@ -27,7 +27,7 @@ class Config:
     print 'Gathering current configuration…',
     sys.stdout.flush()
     if self.is_test:
-      self.is_live = True
+      self.is_live = False
     else:
       self.is_live = os.path.isfile('/mnt/salt/salt-version') and os.path.isfile('/mnt/salt/tmp/distro_infos')
     if self.use_test_data:
@@ -58,7 +58,11 @@ class Config:
           pi = sltl.getPartitionInfo(p)
           self.partitions.append([p, pi['fstype'], "{0} ({1})".format(pi['label'], pi['sizeHuman'])])
       self.boot_partitions = []
-      for probe in sltl.execGetOutput('/usr/sbin/os-prober', shell = False):
+      probes = sltl.execGetOutput('/usr/sbin/os-prober', shell = False)
+      if not self.is_live:
+        # os-prober doesn't want to probe for /
+        probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', r"$(readlink -f $(sed -nr '\,^/dev/[^ ]+ / , {s/^([^ ]+) .*/\1/p;q}' /proc/mounts))", '/', r"$(sed -nr '\,^/dev/[^ ]+ / , {s/^[^ ]+ \/ ([^ ]+) .*/\1/p;q}' /proc/mounts)"])
+      for probe in probes:
         if probe[0] != '/':
           continue
         probe_info = probe.split(':')

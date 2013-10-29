@@ -18,11 +18,11 @@
     <property name="transient_for">bootsetup_main</property>
     <property name="program_name">BootSetup</property>
     <property name="version">0.1</property>
-    <property name="copyright" translatable="yes">Copyright © 2013-2014 Cyrille Pontvieux</property>
+    <property name="copyright">Copyright © 2013-2014 Salix OS</property>
     <property name="comments" translatable="yes">Helps setup a bootloader like LiLo or Grub2.</property>
     <property name="website">http://salixos.org</property>
     <property name="website_label">Salix OS</property>
-    <property name="license" translatable="yes">This program is free software; you can redistribute it 
+    <property name="license">This program is free software; you can redistribute it 
 and/or modify it under the terms of the GNU General
 Public License as published by the Free Software 
 Foundation; either version 2 of the License, or (at your 
@@ -41,7 +41,7 @@ Fifth Floor, Boston, MA 02110-1301, USA.</property>
     <property name="authors">Cyrille Pontvieux &lt;jrd~at~enialis~dot~net&gt;
 Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
     <property name="documenters"></property>
-    <property name="translator_credits" translatable="yes">translator-credits</property>
+    <property name="translator_credits" translatable="yes" comments="Define your name and email here.">translator_name &lt;translator@email.com&gt;</property>
     <property name="logo">bootsetup.png</property>
     <signal name="delete-event" handler="on_about_dialog_close" swapped="no"/>
     <signal name="response" handler="on_about_dialog_close" swapped="no"/>
@@ -174,12 +174,12 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="about_button">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_action_appearance">False</property>
                 <property name="relief">none</property>
-                <signal name="leave-notify-event" handler="on_about_button_leave_notify_event" swapped="no"/>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_about_button_enter_notify_event" swapped="no"/>
                 <signal name="clicked" handler="on_about_button_clicked" swapped="no"/>
                 <child>
@@ -202,8 +202,6 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               <object class="GtkEventBox" id="context_eventbox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <signal name="leave-notify-event" handler="on_context_eventbox_leave_notify_event" swapped="no"/>
-                <signal name="enter-notify-event" handler="on_context_eventbox_enter_notify_event" swapped="no"/>
                 <child>
                   <object class="GtkLabel" id="label_context_help">
                     <property name="width_request">570</property>
@@ -240,13 +238,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkRadioButton" id="radiobutton_lilo">
                 <property name="label">LiLo</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_action_appearance">False</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <signal name="activate" handler="on_radiobutton_lilo_activate" swapped="no"/>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -257,13 +256,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkRadioButton" id="radiobutton_grub2">
                 <property name="label">Grub2</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">radiobutton_lilo</property>
                 <signal name="activate" handler="on_radiobutton_grub2_activate" swapped="no"/>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -287,6 +287,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Install it on:</property>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -301,6 +302,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <property name="model">boot_disk_list_store</property>
                 <property name="has_entry">True</property>
                 <property name="entry_text_column">0</property>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -344,7 +346,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <property name="headers_clickable">False</property>
                             <property name="rules_hint">True</property>
                             <property name="search_column">0</property>
-                            <signal name="leave-notify-event" handler="on_boot_partition_treeview_leave_notify_event" swapped="no"/>
+                            <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <signal name="enter-notify-event" handler="on_boot_partition_treeview_enter_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkTreeViewColumn" id="partition_treeviewcolumn">
@@ -423,14 +425,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <signal name="enter-notify-event" handler="on_up_eventbox_enter_notify_event" swapped="no"/>
-                            <signal name="leave-notify-event" handler="on_up_eventbox_leave_notify_event" swapped="no"/>
+                            <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="up_button">
-                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_up_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image5">
@@ -453,14 +455,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <signal name="enter-notify-event" handler="on_down_eventbox_enter_notify_event" swapped="no"/>
-                            <signal name="leave-notify-event" handler="on_down_eventbox_leave_notify_event" swapped="no"/>
+                            <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="down_button">
-                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_down_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image3">
@@ -500,15 +502,15 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                       <object class="GtkEventBox" id="undo_eventbox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <signal name="leave-notify-event" handler="on_undo_eventbox_leave_notify_event" swapped="no"/>
+                        <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                         <signal name="enter-notify-event" handler="on_undo_eventbox_enter_notify_event" swapped="no"/>
                         <child>
                           <object class="GtkButton" id="undo_button">
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                             <signal name="clicked" handler="on_undo_button_clicked" swapped="no"/>
                             <child>
                               <object class="GtkHBox" id="hbox4">
@@ -555,15 +557,15 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                       <object class="GtkEventBox" id="edit_eventbox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <signal name="leave-notify-event" handler="on_edit_eventbox_leave_notify_event" swapped="no"/>
+                        <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                         <signal name="enter-notify-event" handler="on_edit_eventbox_enter_notify_event" swapped="no"/>
                         <child>
                           <object class="GtkButton" id="edit_button">
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                             <signal name="clicked" handler="on_edit_button_clicked" swapped="no"/>
                             <child>
                               <object class="GtkHBox" id="hbox1">
@@ -631,14 +633,14 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkButton" id="button_quit">
                 <property name="label">gtk-quit</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="has_focus">True</property>
                 <property name="can_default">True</property>
                 <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
-                <signal name="leave-notify-event" handler="on_button_quit_leave_notify_event" swapped="no"/>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_button_quit_enter_notify_event" swapped="no"/>
                 <signal name="clicked" handler="on_main_window_destroy" swapped="no"/>
                 <signal name="clicked" handler="gtk_main_quit" swapped="no"/>
@@ -653,15 +655,15 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               <object class="GtkEventBox" id="execute_eventbox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <signal name="leave-notify-event" handler="on_execute_eventbox_leave_notify_event" swapped="no"/>
+                <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_execute_eventbox_enter_notify_event" swapped="no"/>
                 <child>
                   <object class="GtkButton" id="execute_button">
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="use_action_appearance">False</property>
                     <signal name="clicked" handler="on_execute_button_clicked" swapped="no"/>
                     <child>
                       <object class="GtkHBox" id="hbox2">

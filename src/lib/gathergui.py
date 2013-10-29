@@ -24,12 +24,14 @@ class GatherGui:
   """
   def __init__(self, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
     self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
-    print self.cfg.cur_bootloader
-    print self.cfg.cur_boot_partition
-    print self.cfg.cur_mbr_device
-    print self.cfg.disks
-    print self.cfg.partitions
-    print self.cfg.boot_partitions
+    print """
+bootloader         = {bootloader}
+target partition   = {partition}
+MBR device         = {mbr}
+disks:{disks}
+partitions:{partitions}
+boot partitions:{boot_partitions}
+""".format(bootloader = self.cfg.cur_bootloader, partition = self.cfg.cur_boot_partition, mbr = self.cfg.cur_mbr_device, disks = "\n - " + "\n - ".join(map(" ".join, self.cfg.disks)), partitions = "\n - " + "\n - ".join(map(" ".join, self.cfg.partitions)), boot_partitions = "\n - " + "\n - ".join(map(" ".join, self.cfg.boot_partitions)))
     builder = gtk.Builder()
     for d in ('./resources', '../resources'):
       if os.path.exists(d + '/bootsetup.glade'):
@@ -40,11 +42,14 @@ class GatherGui:
     # TODO
     self.AboutDialog = builder.get_object("about_dialog")
     self.AboutDialog.set_version(version)
-    self.Window = builder.get_object("main_window")
+    self.AboutDialog.set_copyright(__copyright__)
+    self.Window = builder.get_object("bootsetup_main")
+    self.LabelContextHelp = builder.get_object("label_context_help")
     # Initialize the contextual help box
-    print "TODO"
-    # TODO
-    #self.context_intro = _("Contextual help.")
+    self.context_intro = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
+\n\
+A bootloader is required to load the main operating system of a computer and will initially display \
+a boot menu if several operating systems are available on the same computer.")
     self.on_leave_notify_event(None)
     self.build_data_stores()
     self.update_install_button()
@@ -54,12 +59,13 @@ class GatherGui:
 
   # General contextual help
   def on_leave_notify_event(self, widget, data=None):
-    print "TODO"
-    # TODO
-    #self.ContextLabel.set_text(self.context_intro)
+    self.LabelContextHelp.set_markup(self.context_intro)
 
-  # What to do when Salix Installer logo is clicked
-  def on_about_link_clicked(self, widget, data=None):
+
+
+
+  # What to do when BootSetup logo is clicked
+  def on_about_button_clicked(self, widget, data=None):
     self.AboutDialog.show()
 
   # What to do when the about dialog quit button is clicked

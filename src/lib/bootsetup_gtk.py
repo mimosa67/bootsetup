@@ -18,7 +18,7 @@ def run_setup(app_name, locale_dir, version, bootloader, target_partition, is_te
   gettext.install(app_name, locale_dir, True)
   gtk.glade.bindtextdomain(app_name, locale_dir)
   gtk.glade.textdomain(app_name)
-  if not is_test and os.getuid() != 0:
+  if os.getuid() != 0:
     error_dialog(_("Root privileges are required to run this program."), _("Sorry!"))
     sys.exit(1)
   GatherGui(version, bootloader, target_partition, is_test, use_test_data)

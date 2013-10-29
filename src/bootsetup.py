@@ -76,7 +76,7 @@ if __name__ == '__main__':
   if bootloader == '_':
     bootloader = None
   if target_partition and not os.path.exists(target_partition):
-    sys.stderr.write("partition {0} not found".format(target_partition))
+    sys.stderr.write("Partition {0} not found.\n".format(target_partition))
     sys.exit(1)
   locale_dir = '/usr/share/locale'
   if is_test:
