@@ -8,7 +8,6 @@ __copyright__ = 'Copyright 2013-2014, Salix OS'
 __license__ = 'GPL2+'
 
 import sys
-import os
 import re
 import salix_livetools_library as sltl
 
@@ -29,7 +28,7 @@ class Config:
     if self.is_test:
       self.is_live = False
     else:
-      self.is_live = os.path.isfile('/mnt/salt/salt-version') and os.path.isfile('/mnt/salt/tmp/distro_infos')
+      self.is_live = sltl.isSaLTLiveEnv()
     if self.use_test_data:
       self.disks = [
             ['sda', 'WDC100 (100GB)'],

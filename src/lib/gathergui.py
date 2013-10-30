@@ -17,6 +17,7 @@ import subprocess
 from common import *
 from config import *
 import salix_livetools_library as sltl
+from lilo import *
 
 class GatherGui:
   """
@@ -46,9 +47,9 @@ boot partitions:{boot_partitions}
     self.RadioLilo = builder.get_object("radiobutton_lilo")
     self.RadioGrub2 = builder.get_object("radiobutton_grub2")
     self.ComboBoxMbr = builder.get_object("combobox_mbr")
-    self.ComboBoxMbrEntry = builder.get_object("combobox_mbr_entry")
+    self.ComboBoxMbrEntry = self.ComboBoxMbr.get_internal_child(builder, "entry")
     self._add_combobox_cell_renderer(self.ComboBoxMbr, 1)
-    self.LiloPart = builder.get_object("frame_lilo")
+    self.LiloPart = builder.get_object("part_lilo")
     self.BootPartitionTreeview = builder.get_object("boot_partition_treeview")
     self.LabelCellRendererCombo = builder.get_object("label_cellrenderercombo")
     self.PartitionTreeViewColumn = builder.get_object("partition_treeviewcolumn")
@@ -59,24 +60,28 @@ boot partitions:{boot_partitions}
     self.DownButton = builder.get_object("down_button")
     self.UndoButton = builder.get_object("undo_button")
     self.EditButton = builder.get_object("edit_button")
-    self.Grub2Part = builder.get_object("hbox_grub2")
+    self.Grub2Part = builder.get_object("part_grub2")
     self.ComboBoxPartition = builder.get_object("combobox_partition")
-    self.ComboBoxPartitionEntry = builder.get_object("combobox_partition_entry")
+    self.ComboBoxPartitionEntry = self.ComboBoxPartition.get_internal_child(builder, "entry")
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 2)
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 1, padding=20)
+    self.ExecuteButton = builder.get_object("execute_button")
     self.DiskListStore = builder.get_object("boot_disk_list_store")
     self.PartitionListStore = builder.get_object("boot_partition_list_store")
     self.BootPartitionListStore = builder.get_object("boot_bootpartition_list_store")
+    self.BootLabelListStore = builder.get_object("boot_label_list_store")
     # Initialize the contextual help box
     self.context_intro = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
 A bootloader is required to load the main operating system of a computer and will initially display \
 a boot menu if several operating systems are available on the same computer.")
     self.on_leave_notify_event(None)
+    self.editing = False
+    self.custom_lilo = False
+    self.lilo = self.grub2 = None
     self.build_data_stores()
-    self.update_install_button()
+    self.update_buttons()
     # Connect signals
-    self.add_custom_signals()
     builder.connect_signals(self)
 
   def _add_combobox_cell_renderer(self, comboBox, modelPosition, start=False, expand=False, padding=0):
@@ -140,19 +145,31 @@ click on this button to install your bootloader."))
     sys.stdout.flush()
     if self.cfg.cur_bootloader == 'lilo':
       self.RadioLilo.activate()
+      self.Window.set_focus(self.RadioLilo)
     elif self.cfg.cur_bootloader == 'grub2':
       self.RadioGrub2.activate()
+      self.Window.set_focus(self.RadioGrub2)
     self.DiskListStore.clear()
     self.PartitionListStore.clear()
     self.BootPartitionListStore.clear()
     for d in self.cfg.disks:
       self.DiskListStore.append(d)
-    for p in self.cfg.partitions:
+    for p in self.cfg.partitions: # for grub2
       self.PartitionListStore.append(p)
-    for p in self.cfg.boot_partitions:
+    for p in self.cfg.boot_partitions: # for lilo
+      del p[2] # discard boot type
+      p[3] = re.sub(r'[()]', '', re.sub(r'_\(loader\)', '', re.sub(' ', '_', p[3]))) # lilo does not like spaces and pretty print the label
+      if p[3]:
+        p.append('gtk-yes') # add a visual
+      else:
+        p.append('gtk-edit')
       self.BootPartitionListStore.append(p)
     self.ComboBoxMbrEntry.set_text(self.cfg.cur_mbr_device)
     self.ComboBoxPartitionEntry.set_text(self.cfg.cur_boot_partition)
+    self.LabelCellRendererCombo.set_property("model", self.BootLabelListStore)
+    self.LabelCellRendererCombo.set_property('text-column', 0)
+    self.LabelCellRendererCombo.set_property('editable', True)
+    self.LabelCellRendererCombo.set_property('cell_background', '#CCCCCC')
     print ' Done'
     sys.stdout.flush()
 
@@ -167,123 +184,180 @@ click on this button to install your bootloader."))
 
   # What to do when the exit X on the main window upper right is clicked
   def gtk_main_quit(self, widget, data=None):
+    del self.lilo
+    del self.grub2
     print "Bye _o/"
     gtk.main_quit()
 
-  def on_bootloader_type_clicked(self, widget, data=None):
-    if widget.get_active():
-      if widget == self.RadioLilo:
-        self.LiloPart.show()
-        self.Grub2Part.hide()
-      else:
-        self.LiloPart.hide()
-        self.Grub2Part.show()
-
-  def update_install_button(self):
-    print "TODO"
-    #self.InstallButton.set_sensitive(not False in self.cfg.configurations.values())
-
-  def add_custom_signals(self):
-    print "TODO"
-    #self.KeyboardList.get_selection().connect('changed', self.on_keyboard_list_changed_event)
-    #self.LocaleList.get_selection().connect('changed', self.on_locale_list_changed_event)
-  
   def process_gui_events(self):
     """
     be sure to treat any pending GUI events before continue
     """
     while gtk.events_pending():
       gtk.main_iteration()
-  
+
   def update_gui_async(self, fct, *args, **kwargs):
     gobject.idle_add(fct, *args, **kwargs)
 
-
-
-  def show_yesno_dialog(self, msg, yes_callback, no_callback):
-    print "TODO"
-    #self.YesNoDialog.yes_callback = yes_callback
-    #self.YesNoDialog.no_callback = no_callback
-    #self.YesNoDialog.set_markup(msg)
-    #self.YesNoDialog.show()
-    #self.YesNoDialog.resize(1, 1) # ensure a correct size, by asking a recomputation
-    yes_callback()
-  def on_yesno_response(self, dialog, response_id, data=None):
-    dialog.hide()
-    self.process_gui_events()
-    callback = None
-    if response_id == gtk.RESPONSE_YES:
-      callback = dialog.yes_callback
-    elif response_id == gtk.RESPONSE_NO:
-      callback = dialog.no_callback
-    if callback:
-      callback()
-
-
+  def on_bootloader_type_clicked(self, widget, data=None):
+    if widget.get_active():
+      if widget == self.RadioLilo:
+        self.cfg.cur_bootloader = 'lilo'
+        if self.grub2:
+          del self.grub2
+        self.lilo = Lilo()
+        self.LiloPart.show()
+        self.Grub2Part.hide()
+      else:
+        self.cfg.cur_bootloader = 'grub2'
+        if self.lilo:
+          del self.lilo
+        self.grub2 = 'Dummy' # TODO
+        self.LiloPart.hide()
+        self.Grub2Part.show()
+      self.update_buttons()
 
   def on_combobox_mbr_changed(self, widget, data=None):
-    print "TODO"
-    pass
+    self.cfg.cur_mbr_device = self.ComboBoxMbrEntry.get_text()
+    self.update_buttons()
 
-  def on_label_cellrenderercombo_edited(self, widget, data=None):
-    print "TODO"
-    pass
+  def set_editing_mode(self, is_edit):
+    self.editing = is_edit
+    self.update_buttons()
 
-  def on_label_cellrenderercombo_editing_started(self, widget, data=None):
-    print "TODO"
-    pass
+  def on_label_cellrenderercombo_editing_started(self, widget, path, data):
+    self.set_editing_mode(True)
 
-  def on_label_cellrenderercombo_editing_canceled(self, widget, data=None):
-    print "TODO"
-    pass
+  def on_label_cellrenderercombo_editing_canceled(self, widget):
+    self.set_editing_mode(False)
+
+  def on_label_cellrenderercombo_edited(self, widget, row_number, new_text):
+    row_number = int(row_number)
+    max_chars = 15
+    if ' ' in new_text:
+      error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+    elif len(new_text) > max_chars:
+      error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
+    else:
+      model, it = self.BootPartitionTreeview.get_selection().get_selected()
+      found = False
+      for i, line in enumerate(model):
+        if i == row_number or line[3] == _("Set..."):
+          continue
+        if line[3] == new_text:
+          found = True
+          break
+      if found:
+        error_dialog(_("You have used the same label for different Operating Systems. Please verify and correct.\n"))
+      else:
+        model.set_value(it, 3, new_text)
+        if new_text == _("Set..."):
+          model.set_value(it, 4, "gtk-edit")
+        else:
+          model.set_value(it, 4, "gtk-yes")
+    self.set_editing_mode(False)
 
   def on_up_button_clicked(self, widget, data=None):
-    print "TODO"
-    pass
+    """
+    Move the row items upward.
+
+    """
+    # Obtain selection
+    sel = self.BootPartitionTreeview.get_selection()
+    # Get selected path
+    (model, rows) = sel.get_selected_rows()
+    if not rows:
+      return
+    # Get new path for each selected row and swap items.
+    for path1 in rows:
+      # Move path2 upward
+      path2 = (path1[0] - 1,)
+    # If path2 is negative, the user tried to move first path up.
+    if path2[0] < 0:
+      return
+    # Obtain iters and swap items.
+    iter1 = model.get_iter(path1)
+    iter2 = model.get_iter(path2)
+    model.swap(iter1, iter2)
 
   def on_down_button_clicked(self, widget, data=None):
-    print "TODO"
-    pass
+    """
+    Move the row items downward.
 
-  def on_undo_button_clicked(self, widget, data=None):
-    print "TODO"
-    pass
+    """
+    # Obtain selection
+    sel = self.BootPartitionTreeview.get_selection()
+    # Get selected path
+    (model, rows) = sel.get_selected_rows()
+    if not rows:
+      return
+    # Get new path for each selected row and swap items.
+    for path1 in rows:
+      # Move path2 downward
+      path2 = (path1[0] + 1,)
+    # If path2 is negative, we're trying to move first path up.
+    if path2[0] < 0:
+      return
+    # Obtain iters and swap items.
+    iter1 = model.get_iter(path1)
+    # If the second iter is invalid, the user tried to move the last item down.
+    try:
+      iter2 = model.get_iter(path2)
+    except ValueError:
+      return
+    model.swap(iter1, iter2)
 
   def on_edit_button_clicked(self, widget, data=None):
-    print "TODO"
-    pass
+    lilocfg = self.lilo.getConfigurationPath()
+    if not os.path.exists(lilocfg):
+      self.custom_lilo = True
+      self.update_buttons()
+      partitions = []
+
+      self.lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
+    try:
+      sltl.execCall(['xdg-open', lilocfg], shell=False)
+    except:
+      error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
+
+  def on_undo_button_clicked(self, widget, data=None):
+    lilocfg = self.lilo.getConfigurationPath()
+    if not os.path.exists(lilocfg):
+      os.remove(lilocfg)
+      self.custom_lilo = False
+      self.update_buttons()
 
   def on_combobox_partition_changed(self, widget, data=None):
-    print "TODO"
-    pass
+    self.cfg.cur_boot_partition = self.ComboBoxPartitionEntry.get_text()
+    self.update_buttons()
+
+  def update_buttons(self):
+    install_ok = False
+    multiple = False
+    if self.cfg.cur_mbr_device and os.path.exists("/dev/{0}".format(self.cfg.cur_mbr_device)) and sltl.getDiskInfo(self.cfg.cur_mbr_device):
+      if self.cfg.cur_bootloader == 'lilo' and not self.editing:
+        if len(self.BootPartitionListStore) > 1:
+          multiple = True
+        for bp in self.BootPartitionListStore:
+          if bp[4] == "gtk-yes":
+            install_ok = True
+      elif self.cfg.cur_bootloader == 'grub2':
+        if self.cfg.cur_boot_partition and os.path.exists("/dev/{0}".format(self.cfg.cur_boot_partition)) and sltl.getPartitionInfo(self.cfg.cur_boot_partition):
+          install_ok = True
+    self.RadioLilo.set_sensitive(not self.editing)
+    self.RadioGrub2.set_sensitive(not self.editing)
+    self.ComboBoxMbr.set_sensitive(not self.editing)
+    self.BootPartitionTreeview.set_sensitive(not self.custom_lilo)
+    self.UpButton.set_sensitive(not self.editing and multiple)
+    self.DownButton.set_sensitive(not self.editing and multiple)
+    self.UndoButton.set_sensitive(not self.editing and self.custom_lilo)
+    self.EditButton.set_sensitive(not self.editing and install_ok)
+    self.ExecuteButton.set_sensitive(not self.editing and install_ok)
 
   def on_execute_button_clicked(self, widget, data=None):
-    print "TODO"
-    pass
-
-
-
-  def on_install_button_clicked(self, widget, data=None):
-    print "TODO"
-    full_recap_msg = ''
-    full_recap_msg += "\n<b>" + _("You are about to install Salix with the following settings:") + "</b>\n"
-    self.show_yesno_dialog(full_recap_msg, self.setup_bootloader, None)
-  def setup_bootloader(self):
-    print "TODO"
-    self.installation_umountall()
+    print "TODO execute"
     self.installation_done()
-  def installation_umountall(self):
-    print "TODO"
-    # if not self.cfg.is_test:
-    #   if self.cfg.linux_partitions:
-    #     for p in self.cfg.linux_partitions:
-    #       d = p[0]
-    #       fulld = "/dev/{0}".format(d)
-    #       if sltl.isMounted(fulld):
-    #         sltl.umountDevice(fulld, deleteMountPoint = False)
-    #   fulld = "/dev/{0}".format(self.cfg.main_partition)
-    #   if sltl.isMounted(fulld):
-    #     sltl.umountDevice(fulld)
+
   def installation_done(self):
     print "Bootloader Installation Done."
     msg = "<b>{0}</b>".format(_("Bootloader installation process completed..."))
