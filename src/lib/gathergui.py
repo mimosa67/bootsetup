@@ -18,6 +18,7 @@ from common import *
 from config import *
 import salix_livetools_library as sltl
 from lilo import *
+from grub2 import *
 
 class GatherGui:
   """
@@ -159,10 +160,7 @@ click on this button to install your bootloader."))
     for p in self.cfg.boot_partitions: # for lilo
       del p[2] # discard boot type
       p[3] = re.sub(r'[()]', '', re.sub(r'_\(loader\)', '', re.sub(' ', '_', p[3]))) # lilo does not like spaces and pretty print the label
-      if p[3]:
-        p.append('gtk-yes') # add a visual
-      else:
-        p.append('gtk-edit')
+      p.append('gtk-edit') # add a visual
       self.BootPartitionListStore.append(p)
     self.ComboBoxMbrEntry.set_text(self.cfg.cur_mbr_device)
     self.ComboBoxPartitionEntry.set_text(self.cfg.cur_boot_partition)
@@ -212,7 +210,7 @@ click on this button to install your bootloader."))
         self.cfg.cur_bootloader = 'grub2'
         if self.lilo:
           del self.lilo
-        self.grub2 = 'Dummy' # TODO
+        self.grub2 = Grub2()
         self.LiloPart.hide()
         self.Grub2Part.show()
       self.update_buttons()
@@ -307,25 +305,38 @@ click on this button to install your bootloader."))
       return
     model.swap(iter1, iter2)
 
+  def _create_lilo_config(self):
+    partitions = []
+    for p in self.BootPartitionListStore:
+      if p[3] == "gtk-yes":
+        dev = p[0]
+        fs = p[1]
+        t = "chain"
+        for p2 in self.boot_partitions:
+          if p2[0] == dev:
+            t = p2[2]
+            break
+        label = p[2]
+        partitions.append([dev, fs, t, label])
+    self.lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
+
   def on_edit_button_clicked(self, widget, data=None):
     lilocfg = self.lilo.getConfigurationPath()
     if not os.path.exists(lilocfg):
       self.custom_lilo = True
       self.update_buttons()
-      partitions = []
-
-      self.lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
+      self._create_lilo_config()
     try:
-      sltl.execCall(['xdg-open', lilocfg], shell=False)
+      sltl.execCall(['xdg-open', lilocfg], shell=False, env=None)
     except:
       error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
 
   def on_undo_button_clicked(self, widget, data=None):
     lilocfg = self.lilo.getConfigurationPath()
-    if not os.path.exists(lilocfg):
+    if os.path.exists(lilocfg):
       os.remove(lilocfg)
-      self.custom_lilo = False
-      self.update_buttons()
+    self.custom_lilo = False
+    self.update_buttons()
 
   def on_combobox_partition_changed(self, widget, data=None):
     self.cfg.cur_boot_partition = self.ComboBoxPartitionEntry.get_text()
@@ -355,7 +366,12 @@ click on this button to install your bootloader."))
     self.ExecuteButton.set_sensitive(not self.editing and install_ok)
 
   def on_execute_button_clicked(self, widget, data=None):
-    print "TODO execute"
+    if self.cfg.cur_bootloader == 'lilo':
+      if not os.path.exists(self.lilo.getConfigurationPath()):
+        self._create_lilo_config()
+      self.lilo.install()
+    elif self.cfg.cur_bootloader == 'grub2':
+      self.grub2.install(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition)
     self.installation_done()
 
   def installation_done(self):
