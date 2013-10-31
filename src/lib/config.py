@@ -60,7 +60,9 @@ class Config:
       probes = sltl.execGetOutput('/usr/sbin/os-prober', shell = False)
       if not self.is_live:
         # os-prober doesn't want to probe for /
-        probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', r"$(readlink -f $(sed -nr '\,^/dev/[^ ]+ / , {s/^([^ ]+) .*/\1/p;q}' /proc/mounts))", '/', r"$(sed -nr '\,^/dev/[^ ]+ / , {s/^[^ ]+ \/ ([^ ]+) .*/\1/p;q}' /proc/mounts)"])
+        slashDevice = sltl.execGetOutput(r"readlink -f $(df / | tail -n 1 | cut -d' ' -f1)")[0]
+        slashFS = sltl.getFsType(re.sub(r'^/dev/', '', slashDevice))
+        probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
       for probe in probes:
         if probe[0] != '/':
           continue
