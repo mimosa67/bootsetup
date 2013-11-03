@@ -38,15 +38,13 @@ class Lilo:
       return sltl.mountDevice(boot_partition)
 
   def _mountBootInBootPartition(self, mount_point):
-    self._bootInBootMounted = False
     # assume that if the mount_point is /, any /boot directory is already accessible/mounted
     if mount_point != '/' and os.path.exists(os.path.join(mount_point, 'etc/fstab')):
       try:
-        sltl.execCall("grep /boot {mp}/etc/fstab && chroot {mp} mount /boot".format(mp = mount_point))
-        self._bootInBootMounted = True
+        if sltl.execCall("grep /boot {mp}/etc/fstab && chroot {mp} /sbin/mount /boot".format(mp = mount_point)):
+          self._bootInBootMounted = True
       except:
         pass
-    pass
 
   def _mountPartitions(self, partitions):
     """
@@ -59,12 +57,11 @@ class Lilo:
 
   def _umountAll(self, mount_point, mountPointList):
     if self._bootInBootMounted:
-      sltl.execCall("chroot {mp} umount /boot".format(mp = mount_point))
+      sltl.execCall("chroot {mp} /sbin/umount /boot".format(mp = mount_point))
     for mp in mountPointList:
       sltl.umountDevice(mp)
     if mount_point != '/':
       sltl.umountDevice(mount_point)
-    pass
 
   def _createLiloSections(self, partitions, mountPointList):
     """
@@ -179,6 +176,7 @@ class Lilo:
     self.mbr_device = mbr_device
     self.boot_partition = boot_partition
     self.partitions = partitions
+    self._bootInBootMounted = False
     try:
       mp = self._mountBootPartition(boot_partition)
       self._mountBootInBootPartition(mp)
@@ -256,12 +254,14 @@ vga = {vga}
       f.close()
     finally:
       self._umountAll()
+    self._bootInBootMounted = False
 
   def install(self):
     """
     Assuming that last configuration editing didn't modified mount point.
     """
     print "TODO install LiLo"
+    self._bootInBootMounted = False
     mp = None
     try:
       mp = self._mountBootPartition(self.boot_partition)
@@ -284,3 +284,4 @@ vga = {vga}
         sltl.execCall('umount {mp}/proc'.format(mp = mp))
         sltl.execCall('umount {mp}/dev'.format(mp = mp))
       self._umountAll()
+    self._bootInBootMounted = False
