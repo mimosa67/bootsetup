@@ -14,15 +14,25 @@ import salix_livetools_library as sltl
 
 class Grub2:
   
-  def __init__(self):
+  isTest = False
+  _prefix = None
+  _tmp = None
+  
+  def __init__(self, isTest):
+    self.isTest = isTest
     self._prefix = "bootsetup.grub2-"
-    self._tmp = tempfile.mkdtemp(self._prefix)
+    self._tmp = tempfile.mkdtemp(prefix = self._prefix)
     sltl.mounting._tempMountDir = os.path.join(self._tmp, 'mounts')
+    if isTest:
+      print "tmp dir = {0}".format(self._tmp)
 
   def __del__(self):
     print "nettoyage grub2"
     if self._tmp and os.path.exists(self._tmp):
-      shutil.rmtree(self._tmp)
+      if self.isTest:
+        print "rm -r " + self._tmp
+      else:
+        shutil.rmtree(self._tmp)
 
   def _mountBootPartition(self, boot_partition):
     """
@@ -62,15 +72,25 @@ class Grub2:
       sltl.execCall('umount {mp}/sys'.format(mp = mount_point))
 
   def _copyAndInstallGrub2(self, mount_point, device):
-    return sltl.execCall("grub-install --boot-directory {bootdir} --no-floppy {dev}".format(bootdir = os.path.join(mount_point, "boot"), dev = device))
+    if self.isTest:
+      print "grub-install --boot-directory {bootdir} --no-floppy {dev}".format(bootdir = os.path.join(mount_point, "boot"), dev = device)
+      return 0
+    else:
+      return sltl.execCall("grub-install --boot-directory {bootdir} --no-floppy {dev}".format(bootdir = os.path.join(mount_point, "boot"), dev = device))
 
   def _installGrub2Config(self, mount_point):
     if os.path.exists(os.path.join(mount_point, 'etc/default/grub')) and os.path.exists(os.path.join(mount_point, 'usr/sbin/update-grub')):
       # assume everything is installed on the target partition, grub2 package included.
-      sltl.execCall("chroot {mp} /usr/sbin/update-grub".format(mp = mount_point)):
+      if self.isTest:
+        print "chroot {mp} /usr/sbin/update-grub".format(mp = mount_point)
+      else:
+        sltl.execCall("chroot {mp} /usr/sbin/update-grub".format(mp = mount_point))
     else:
       # tiny OS installed on that mount point, so we cannot chroot on it to install grub2 config.
-      sltl.execCall("grub-mkconfig -o {cfg}".format(cfg = os.path.join(mount_point, "boot/grub/grub.cfg")))
+      if self.isTest:
+        print "grub-mkconfig -o {cfg}".format(cfg = os.path.join(mount_point, "boot/grub/grub.cfg"))
+      else:
+        sltl.execCall("grub-mkconfig -o {cfg}".format(cfg = os.path.join(mount_point, "boot/grub/grub.cfg")))
 
   def _umountAll(self, mount_point):
     if mount_point:
