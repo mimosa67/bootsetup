@@ -63,7 +63,7 @@ def mountDevice(device, fsType = None, mountPoint = None):
   """
   Mount the 'device' of 'fsType' filesystem under 'mountPoint'.
   If 'mountPoint' is not specified, '{0}/device' will be used.
-  Returns False if it fails.
+  Returns False if it fails or the mount point if it succeed.
   """.format(_tempMountDir) 
   if not fsType:
     fsType = getFsType(re.sub(r'/dev/', '', device))
@@ -81,6 +81,8 @@ def mountDevice(device, fsType = None, mountPoint = None):
   ret = execCall(['mount', '-t', fsType, device, mountPoint], shell = False)
   if ret != 0 and autoMP:
     _deleteMountPoint(mountPoint)
+  else:
+    ret = mountPoint
   return ret
 
 def umountDevice(deviceOrPath, tryLazyUmount = True, deleteMountPoint = True):

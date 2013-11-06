@@ -183,8 +183,10 @@ click on this button to install your bootloader."))
 
   # What to do when the exit X on the main window upper right is clicked
   def gtk_main_quit(self, widget, data=None):
-    del self.lilo
-    del self.grub2
+    if self.lilo:
+      del self.lilo
+    if self.grub2:
+      del self.grub2
     print "Bye _o/"
     gtk.main_quit()
 
@@ -203,14 +205,14 @@ click on this button to install your bootloader."))
       if widget == self.RadioLilo:
         self.cfg.cur_bootloader = 'lilo'
         if self.grub2:
-          del self.grub2
+          self.grub2 = None
         self.lilo = Lilo(self.cfg.is_test)
         self.LiloPart.show()
         self.Grub2Part.hide()
       else:
         self.cfg.cur_bootloader = 'grub2'
         if self.lilo:
-          del self.lilo
+          self.lilo = None
         self.grub2 = Grub2(self.cfg.is_test)
         self.LiloPart.hide()
         self.Grub2Part.show()

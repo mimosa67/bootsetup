@@ -28,13 +28,13 @@ class Lilo:
 # Start LILO global section
 # Append any additional kernel parameters:
 append = "vt.default_utf8=1 "
-boot = "{boot}"
+boot = {boot}
 lba32
 compact
 
 # Boot BMP Image.
 # Bitmap in BMP format: 640x480x8
-bitmap = /boot/salix.bmp
+bitmap = {mp}/boot/salix.bmp
 # Menu colors (foreground, background, shadow, highlighted
 # foreground, highlighted background, highlighted shadow):
 bmp-colors = 255,20,255,20,255,20
@@ -89,16 +89,27 @@ vga = {vga}
     self._prefix = "bootsetup.lilo-"
     self._tmp = tempfile.mkdtemp(prefix = self._prefix)
     sltl.mounting._tempMountDir = os.path.join(self._tmp, 'mounts')
-    if isTest:
-      print "tmp dir = {0}".format(self._tmp)
+    self.__debug("tmp dir = " + self._tmp)
 
   def __del__(self):
-    print "nettoyage lilo"
     if self._tmp and os.path.exists(self._tmp):
-      if self.isTest:
-        print "rm -r " + self._tmp
-      else:
-        shutil.rmtree(self._tmp)
+      self.__debug("cleanning " + self._tmp)
+      try:
+        cfgPath = self.getConfigurationPath()
+        if os.path.exists(cfgPath):
+          self.__debug("Remove " + cfgPath)
+          os.remove(cfgPath)
+        if os.path.exists(sltl.mounting._tempMountDir):
+          self.__debug("Remove " + sltl.mounting._tempMountDir)
+          os.rmdir(sltl.mounting._tempMountDir)
+        self.__debug("Remove " + self._tmp)
+        os.rmdir(self._tmp)
+      except:
+        pass
+
+  def __debug(self, msg):
+    if self.isTest:
+      print "Debug: " + msg
 
   def getConfigurationPath(self):
     return os.path.join(self._tmp, "lilo.conf")
@@ -107,17 +118,22 @@ vga = {vga}
     """
     Return the mount point
     """
-    print self._bootPartition
+    self.__debug("bootPartition = " + self._bootPartition)
     if sltl.isMounted(self._bootPartition):
+      self.__debug("bootPartition already mounted")
       return sltl.getMountPoint(self._bootPartition)
     else:
+      self.__debug("bootPartition not mounted")
       return sltl.mountDevice(self._bootPartition)
 
   def _mountBootInBootPartition(self, mountPoint):
     # assume that if the mount_point is /, any /boot directory is already accessible/mounted
     if mountPoint != '/' and os.path.exists(os.path.join(mountPoint, 'etc/fstab')):
+      self.__debug("mp != / and etc/fstab exists, will try to mount /boot by chrooting")
       try:
-        if sltl.execCall("grep /boot {mp}/etc/fstab && chroot {mp} /sbin/mount /boot".format(mp = mountPoint)):
+        self.__debug("grep -q /boot {mp}/etc/fstab && chroot {mp} /sbin/mount /boot".format(mp = mountPoint))
+        if sltl.execCall("grep -q /boot {mp}/etc/fstab && chroot {mp} /sbin/mount /boot".format(mp = mountPoint)):
+          self.__debug("/boot mounted in " + mp)
           self._bootInBootMounted = True
       except:
         pass
@@ -128,20 +144,28 @@ vga = {vga}
     """
     mountPointList = []
     if self._partitions:
+      self.__debug("mount partitions: " + str(self._partitions))
       for p in self._partitions:
         dev = os.path.join("/dev", p[0])
+        self.__debug("mount partition " + dev)
         mountPointList.append(sltl.mountDevice(dev))
     return mountPointList
 
   def _umountAll(self, mountPoint, mountPointList):
+    self.__debug("umountAll")
     if mountPoint:
+      self.__debug("umounting main mount point " + mountPoint)
       if self._bootInBootMounted:
+        self.__debut("/boot mounted in " + mountPoint + ", so umount it")
         sltl.execCall("chroot {mp} /sbin/umount /boot".format(mp = mountPoint))
         self._bootInBootMounted = False
       if mountPointList:
+        self.__debug("umount other mount points: " + str(mountPointList))
         for mp in mountPointList:
+          self.__debug("umount " + str(mp))
           sltl.umountDevice(mp)
       if mountPoint != '/':
+        self.__debug("main mount point ≠ '/' → umount " + mountPoint)
         sltl.umountDevice(mountPoint)
 
   def _createLiloSections(self, mountPointList):
@@ -171,6 +195,7 @@ vga = {vga}
     """
     Returns a string for a chainloaded section
     """
+    self.__debug("Section 'chain' for " + device + " with label: " + label)
     return """# {label} chain section
   other = {device}
   label = {label}
@@ -181,29 +206,42 @@ vga = {vga}
     Returns a list of string sections, one for each kernel+initrd
     """
     sections = []
+    self.__debug("Section 'linux' for " + device + "/" + fs + ", mounted on " + mp + " with label: " + label)
     kernelList = sorted(glob.glob("{mp}/boot/vmlinuz*".format(mp = mp)))
     initrdList = sorted(glob.glob("{mp}/boot/initr*".format(mp = mp)))
+    for l in (kernelList, initrdList):
+      for el in l:
+        if os.path.isdir(el) or os.path.islink(el):
+          l.remove(el)
+    self.__debug("kernelList: " + str(kernelList))
+    self.__debug("initrdList: " + str(initrdList))
     uuid = sltl.execGetOutput(['/sbin/blkid', '-s', 'UUID', '-o', 'value', device], shell = False)
+    if uuid:
+      rootDevice = "/dev/disk/by-uuid/{uuid}".format(uuid = uuid[0])
+    else:
+      rootDevice = device
+    self.__debug("rootDevice = " + rootDevice)
     for (k, i, l) in self._getKernelInitrdCouples(kernelList, initrdList, label):
+      self.__debug("kernel, initrd, label found: " + str(k) + "," + str(i) + "," + str(l))
       section = None
       if i:
-        section = """# {l} Linux section
-  image = {image}
+        section = """# {label} Linux section
   root = {root}
+  image = {image}
   initrd = {initrd}
-""".format(image = k, initrd = i, root = "/dev/disk/by-uuid/{uuid}".format(uuid = uuid))
+""".format(image = k, initrd = i, root = rootDevice, label = l)
       else:
-        section = """# {l} Linux section
-  image = {image}
+        section = """# {label} Linux section
   root = {root}
-""".format(image = k, root = "/dev/disk/by-uuid/{uuid}".format(uuid = uuid))
+  image = {image}
+""".format(image = k, root = rootDevice, label = l)
       if fs == 'ext4':
         section += '  append = "{append} "\n'.format(append = 'rootfstype=ext4')
       section += "  read-only\n  label = {label}\n".format(label = l)
       sections.append(section)
     return sections
 
-  def _getKernelInitrdCouples(kernelList, initrdList, labelRef):
+  def _getKernelInitrdCouples(self, kernelList, initrdList, labelRef):
     ret = []
     if kernelList:
       if len(kernelList) == 1:
@@ -222,15 +260,17 @@ vga = {vga}
             if kernelSuffix in i: # find the matching initrd
               initrd = i
               break
-          ret.append(kernel, initrd, labelBase + str(n))
+          ret.append((kernel, initrd, labelBase + str(n)))
     return ret
 
   def _getFrameBufferConf(self):
     """
     Return the frame buffer configuration for this hardware.
+    Format: (fb, label)
     """
     fbGeometry = sltl.execGetOutput("fbset | grep -w geometry")
     mode = None
+    graphicMode = None
     if fbGeometry:
       vesaModes = {
           '320x200x4' :None, '640x400x4' :None, '640x480x4' :None, '800x500x4' :None, '800x600x4' : 770, '896x672x4' :None, '1024x640x4' :None, '1024x768x4' : 772, '1152x720x4' :None, '1280x800x4:' :None, '1280x1024x4' : 774, '1400x1050x4' :None, '1440x900x4' :None, '1600x1200x4' :None, '1920x1200x4' :None,
@@ -240,7 +280,8 @@ vga = {vga}
           '320x200x24': 783, '640x400x24': 803, '640x480x24': 786, '800x500x24': 882, '800x600x24': 789, '896x672x24': 818, '1024x640x24': 877, '1024x768x24': 792, '1152x720x24': 872, '1280x800x24:': 867, '1280x1024x24': 795, '1400x1050x24': 799, '1440x900x24': 867, '1600x1200x24': 799, '1920x1200x24': 896,
           '320x200x32':None, '640x400x32': 804, '640x480x32': 809, '800x500x32': 883, '800x600x32': 814, '896x672x32': 819, '1024x640x32': 878, '1024x768x32': 824, '1152x720x32': 873, '1280x800x32:': 868, '1280x1024x32': 829, '1400x1050x32': 834, '1440x900x32': 868, '1600x1200x32': 834, '1920x1200x32': 897,
           }
-      values = fbGeometry[0].split(' ')
+      values = fbGeometry[0].strip().split(' ')
+      self.__debug("FB Values: " + str(values))
       xres = values[1]
       yres = values[2]
       deep = values[-1]
@@ -249,25 +290,32 @@ vga = {vga}
         mode = vesaModes[graphicMode]
     if not mode:
       mode = 'normal'
-    return mode
+      label = 'text'
+    else:
+      label = graphicMode
+    return (mode, label)
 
-  def createConfiguration(self, mbr_device, boot_partition, partitions):
+  def createConfiguration(self, mbrDevice, bootPartition, partitions):
     """
     partitions format: [device, filesystem, boot type, label]
     """
-    self._mbrDevice = os.path.join("/dev", mbr_device)
-    self._bootPartition = os.path.join("/dev", boot_partition)
+    self._mbrDevice = os.path.join("/dev", mbrDevice)
+    self._bootPartition = os.path.join("/dev", bootPartition)
     self._partitions = partitions
     mp = None
     mpList = None
     try:
       mp = self._mountBootPartition()
+      self.__debug("mp = " + str(mp))
       self._mountBootInBootPartition(mp)
       mpList = self._mountPartitions()
+      self.__debug("mount point lists: " + str(mpList))
       liloSections = self._createLiloSections(mpList)
-      fb = self._getFrameBufferConf()
+      self.__debug("lilo sections: " + str(liloSections))
+      (fb, fbLabel) = self._getFrameBufferConf()
+      self.__debug("frame buffer mode = " + str(fb) + " " + str(fbLabel))
       f = open(self.getConfigurationPath(), "w")
-      f.write(self._cfgTemplate.format(boot = self._mbrDevice, vga = fb))
+      f.write(self._cfgTemplate.format(boot = self._mbrDevice, mp = mp, vga = "{0} # {1}".format(fb, fbLabel)))
       for s in liloSections:
         f.write(s)
         f.write("\n")
@@ -282,27 +330,35 @@ vga = {vga}
     if self._mbrDevice:
       self._bootInBootMounted = False
       mp = None
+      mpList = None
       try:
         mp = self._mountBootPartition()
+        self.__debug("mp = " + str(mp))
         self._mountBootInBootPartition(mp)
         if mp != "/":
+          self.__debug("mount point ≠ / so mount /dev and /proc in it")
           # bind /dev and /proc in boot_partition
           sltl.execCall('mount -o bind /dev {mp}/dev'.format(mp = mp))
           sltl.execCall('mount -o bind /proc {mp}/proc'.format(mp = mp))
         mpList = self._mountPartitions()
+        self.__debug("mount point lists: " + str(mpList))
         # copy the configuration to the boot_partition
         try:
+          self.__debug("create etc/bootsetup directory in " + mp)
           os.makedirs(os.path.join(mp, 'etc/bootsetup'))
         except os.error:
           pass
-        shutil.copyfile(self.getConfigurationPath, os.path.join(mp, '/etc/bootsetup/lilo.conf'))
+        self.__debug("copy lilo.conf to etc/bootsetup")
+        shutil.copyfile(self.getConfigurationPath(), os.path.join(mp, '/etc/bootsetup/lilo.conf'))
         # run lilo
         if self.isTest:
-          print 'lilo -C {mp}/etc/bootsetup/lilo.conf'.format(mp = mp)
+          self.__debug('/sbin/lilo -t -v -C {mp}/etc/bootsetup/lilo.conf'.format(mp = mp))
+          sltl.execCall('/sbin/lilo -t -v -C {mp}/etc/bootsetup/lilo.conf'.format(mp = mp))
         else:
-          sltl.execCall('lilo -C {mp}/etc/bootsetup/lilo.conf'.format(mp = mp))
+          sltl.execCall('/sbin/lilo -C {mp}/etc/bootsetup/lilo.conf'.format(mp = mp))
       finally:
         if mp and mp != "/":
+          self.__debug("mount point ≠ / so umount /dev and /proc in it")
           sltl.execCall('umount {mp}/proc'.format(mp = mp))
           sltl.execCall('umount {mp}/dev'.format(mp = mp))
-        self._umountAll()
+        self._umountAll(mp, mpList)
