@@ -139,18 +139,20 @@ vga = {vga}
       except:
         pass
 
-  def _mountPartitions(self):
+  def _mountPartitions(self, mountPointList):
     """
-    Return a list of mount points for each partition
+    Fill a list of mount points for each partition
     """
-    mountPointList = []
     if self._partitions:
       self.__debug("mount partitions: " + str(self._partitions))
       for p in self._partitions:
         dev = os.path.join("/dev", p[0])
         self.__debug("mount partition " + dev)
-        mountPointList.append(sltl.mountDevice(dev))
-    return mountPointList
+        mp = sltl.mountDevice(dev)
+        if mp:
+          mountPointList.append(mp)
+        else:
+          raise Exception("Cannot mount {d}".format(d = dev))
 
   def _umountAll(self, mountPoint, mountPointList):
     self.__debug("umountAll")
@@ -414,9 +416,12 @@ vga = {vga}
     mpList = None
     try:
       mp = self._mountBootPartition()
+      if not mp:
+        raise Exception("Cannot mount the main boot partition.")
       self.__debug("mp = " + str(mp))
       self._mountBootInBootPartition(mp)
-      mpList = self._mountPartitions()
+      mpList = []
+      self._mountPartitions(mpList)
       self.__debug("mount point lists: " + str(mpList))
       liloSections = self._createLiloSections(mpList)
       self.__debug("lilo sections: " + str(liloSections))
@@ -441,6 +446,8 @@ vga = {vga}
       mpList = None
       try:
         mp = self._mountBootPartition()
+        if not mp:
+          raise Exception("Cannot mount the main boot partition.")
         self.__debug("mp = " + str(mp))
         self._mountBootInBootPartition(mp)
         if mp != "/":
@@ -448,7 +455,8 @@ vga = {vga}
           # bind /dev and /proc in boot_partition
           sltl.execCall('mount -o bind /dev {mp}/dev'.format(mp = mp))
           sltl.execCall('mount -o bind /proc {mp}/proc'.format(mp = mp))
-        mpList = self._mountPartitions()
+        mpList = []
+        self._mountPartitions(mpList)
         self.__debug("mount point lists: " + str(mpList))
         # copy the configuration to the boot_partition
         try:
