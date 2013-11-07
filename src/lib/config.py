@@ -75,6 +75,7 @@ class Config:
         probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
       self.__debug("Probes: " + str(probes))
       for probe in probes:
+        probe = probe.strip() # ensure clean line
         if probe[0] != '/':
           continue
         probe_info = probe.split(':')
