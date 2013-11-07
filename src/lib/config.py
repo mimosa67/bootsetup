@@ -22,8 +22,15 @@ class Config:
     self.is_test = is_test
     self.use_test_data = use_test_data
     self._get_current_config()
+
+  def __debug(self, msg):
+    if self.is_test:
+      print "Debug: " + msg
+
   def _get_current_config(self):
     print 'Gathering current configuration…',
+    if self.is_test:
+      print ''
     sys.stdout.flush()
     if self.is_test:
       self.is_live = False
@@ -58,11 +65,15 @@ class Config:
           self.partitions.append([p, pi['fstype'], "{0} ({1})".format(pi['label'], pi['sizeHuman'])])
       self.boot_partitions = []
       probes = sltl.execGetOutput('/usr/sbin/os-prober', shell = False)
+      self.__debug("Probes: " + str(probes))
       if not self.is_live:
         # os-prober doesn't want to probe for /
         slashDevice = sltl.execGetOutput(r"readlink -f $(df / | tail -n 1 | cut -d' ' -f1)")[0]
         slashFS = sltl.getFsType(re.sub(r'^/dev/', '', slashDevice))
+        self.__debug("Root device {0} ({1})".format(slashDevice, slashFS))
+        self.__debug("/usr/lib/os-probes/mounted/90linux-distro " + slashDevice + " / " + slashFS)
         probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
+      self.__debug("Probes: " + str(probes))
       for probe in probes:
         if probe[0] != '/':
           continue

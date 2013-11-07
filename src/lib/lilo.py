@@ -12,6 +12,7 @@ import shutil
 import os
 import glob
 import salix_livetools_library as sltl
+import subprocess
 
 class Lilo:
   
@@ -268,7 +269,11 @@ vga = {vga}
     Return the frame buffer configuration for this hardware.
     Format: (fb, label)
     """
-    fbGeometry = sltl.execGetOutput("fbset | grep -w geometry")
+    try:
+      fbGeometry = sltl.execGetOutput("/usr/sbin/fbset | grep -w geometry")
+    except subprocess.CalledProcessorError:
+      self.__debug("Impossible to determine frame buffer mode, default to text.")
+      fbGeometry = None
     mode = None
     graphicMode = None
     if fbGeometry:
