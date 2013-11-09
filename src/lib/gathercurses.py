@@ -24,30 +24,16 @@ class GatherCurses:
   UI in curses/urwid to gather information about the configuration to setup.
   """
   
+  _version = 0.1
   # Other potential color schemes can be found at:
   # http://excess.org/urwid/wiki/RecommendedPalette
   _palette = [
       ('body', 'default', 'default'),
-      ('focus', 'black', 'light gray'),
-      ('header', 'light blue', 'default'),
-      ('important', 'light red', 'default'),
-      ('connected', 'dark green', 'default'),
-      ('connected focus', 'black', 'dark green'),
-      ('editcp', 'default', 'default', 'standout'),
-      ('editbx', 'light gray', 'dark blue'),
-      ('editfc', 'white', 'dark blue', 'bold'),
-      ('editnfc', 'brown', 'default', 'bold'),
-      ('tab active', 'dark green', 'light gray'),
-      ('infobar', 'light gray', 'dark blue'),
-      ('listbar', 'light blue', 'default'),
-      # Simple colors around text
-      ('green', 'dark green', 'default'),
-      ('blue', 'light blue', 'default'),
-      ('red', 'dark red', 'default'),
-      ('bold', 'white', 'black', 'bold')
+      ('header', 'dark red', 'light gray', 'bold'),
+      ('footer', 'dark blue', 'light gray', 'bold'),
     ]
-  _loop = None
   _view = None
+  _loop = None
 
   def __init__(self, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
     self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
@@ -70,8 +56,34 @@ boot partitions:{boot_partitions}
     self._loop.run()
 
   def _createView(self):
-    txt = urwid.Text("BootSetup curses version - Wip…")
-    frame = urwid.Frame(urwid.AttrWrap(urwid.ListBox([txt]), 'plain'))
+    """
++=======================================+
+|                 Title                 |
++=======================================+
+| Introduction text                     |
++---------------------------------------+
+| Bootloader: (×) LiLo (_) Grub2        |
+| MBR Device:  |____________vvv|        | <== ComboBox thanks to wicd
+| Grub2 files: |____________vvv|        | <== Grub2 only
+| +-----------------------------------+ | --+
+| |Dev.|FS  |Type |Label      |Actions| |   |
+| |sda1|ext4|Salix|Salix14____|<↑><↓> | |   |
+| |sda5|xfs |Arch |ArchLinux__|<↑><↓> | |   +- <== LiLo only
+| +-----------------------------------+ |   |
+| <Edit config>                         |   |
+| <Undo custom config>                  | --+
+| <Install>                             |
++=======================================+
+| H: Help, A: About, Q: Quit            |
++=======================================+
+    """
+    txtTitle = urwid.Text("BootSetup curses, version {ver}".format(ver = self._version), align = "center")
+    txtIntro = urwid.Text("Introduction text")
+    txtFooter = urwid.Text("H: Help, A: About, Q: Quit")
+    header = urwid.AttrMap(txtTitle, 'header')
+    footer = urwid.AttrMap(txtFooter, 'footer')
+    body = urwid.Filler(txtIntro)
+    frame = urwid.Frame(body, header, footer)
     self._view = frame
 
   def _unhandled_input(self, key):
