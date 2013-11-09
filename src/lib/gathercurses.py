@@ -82,7 +82,8 @@ boot partitions:{boot_partitions}
     txtFooter = urwid.Text("H: Help, A: About, Q: Quit")
     header = urwid.AttrMap(txtTitle, 'header')
     footer = urwid.AttrMap(txtFooter, 'footer')
-    body = urwid.Filler(txtIntro)
+    pile = urwid.Pile([txtIntro])
+    body = urwid.Filler(pile)
     frame = urwid.Frame(body, header, footer)
     self._view = frame
 
