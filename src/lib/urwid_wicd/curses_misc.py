@@ -333,7 +333,7 @@ class ComboBox(urwid.WidgetWrap):
                     width = len(entry)
             content = [urwid.AttrWrap(SelText(w), attr[0], attr[1])
                        for w in l]
-            self._listbox = urwid.ListBox(content)
+            self._listbox = urwid.ListBox(urwid.SimpleListWalker(content))
             self._listbox.set_focus(show_first)
 
             overlay = urwid.Overlay(self._listbox, body, ('fixed left', pos[0]),

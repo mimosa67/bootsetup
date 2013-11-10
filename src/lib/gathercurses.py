@@ -33,9 +33,12 @@ class GatherCurses:
       ('header', 'dark red', 'light gray', 'bold'),
       ('footer', 'light green', 'dark gray', 'bold'),
       ('footer_key', 'yellow', 'black', 'bold'),
+      ('non_focusable', 'brown', 'default', 'bold'),
+      ('focus', 'black', 'light gray'),
     ]
   _view = None
   _loop = None
+  _comboBoxes = [] # hack for ComboBox
 
   def __init__(self, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
     self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
@@ -55,6 +58,11 @@ boot partitions:{boot_partitions}
     ui.set_mouse_tracking()
     self._createView()
     self._loop = urwid.MainLoop(self._view, self._palette, handle_mouse = True, unhandled_input = self._handleKeys)
+
+    # hack for ComboBox
+    for c in self._comboBoxes:
+      c.build_combobox(self._view, self._loop.screen, c.displayRows)
+
     self._loop.run()
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 0, v_sep = 0):
@@ -102,7 +110,7 @@ boot partitions:{boot_partitions}
     radioGrub2 = urwid.RadioButton(radioGroupBootloader, "Grub2", on_state_change = self._onGrub2Change)
     bootloaderTypeSection = urwid.Columns([lblBootloader, radioLiLo, radioGrub2], focus_column = 1)
 
-    mbrDeviceSection =self._createMbrDeviceSectionView()
+    mbrDeviceSection = self._createMbrDeviceSectionView()
 
     bootloaderSection = self._createBootloaderSectionView()
 
@@ -116,7 +124,14 @@ boot partitions:{boot_partitions}
     self._view = frame
 
   def _createMbrDeviceSectionView(self):
-    return urwid.WidgetPlaceholder(urwid.Text("mbr device section"))
+    comboList = []
+    for d in self.cfg.disks:
+      comboList.append(" - ".join(d))
+    comboBox = urwicd.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('body', 'non-focusable'), focus_attr = 'focus')
+    # hack
+    comboBox.displayRows = 5
+    self._comboBoxes.append(comboBox)
+    return comboBox
 
   def _createBootloaderSectionView(self):
     return urwid.WidgetPlaceholder(urwid.Text("bootloader section"))
