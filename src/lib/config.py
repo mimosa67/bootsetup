@@ -64,15 +64,18 @@ class Config:
           pi = sltl.getPartitionInfo(p)
           self.partitions.append([p, pi['fstype'], "{0} ({1})".format(pi['label'], pi['sizeHuman'])])
       self.boot_partitions = []
-      probes = sltl.execGetOutput('/usr/sbin/os-prober', shell = False)
-      self.__debug("Probes: " + str(probes))
+      probes = []
       if not self.is_live:
         # os-prober doesn't want to probe for /
         slashDevice = sltl.execGetOutput(r"readlink -f $(df / | tail -n 1 | cut -d' ' -f1)")[0]
         slashFS = sltl.getFsType(re.sub(r'^/dev/', '', slashDevice))
         self.__debug("Root device {0} ({1})".format(slashDevice, slashFS))
         self.__debug("/usr/lib/os-probes/mounted/90linux-distro " + slashDevice + " / " + slashFS)
-        probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
+        slashDistro = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
+        if slashDistro:
+          probes = slashDistro
+      self.__debug("Probes: " + str(probes))
+      probes.extend(sltl.execGetOutput('/usr/sbin/os-prober', shell = False))
       self.__debug("Probes: " + str(probes))
       for probe in probes:
         probe = probe.strip() # ensure clean line
