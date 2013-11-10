@@ -45,6 +45,8 @@ def execGetOutput(cmd, withError = False, shell = True, env = {'LANG' : 'en_US'}
   if withError:
     stdErr = subprocess.STDOUT
   if sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 7): # ver >= 2.7
+    if shell and isinstance(cmd, list):
+      cmd = ' '.join(cmd)
     return subprocess.check_output(cmd, stderr = stdErr, shell = shell, env = env).splitlines()
   else:
     wrappedCmd = []
