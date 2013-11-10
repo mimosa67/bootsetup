@@ -7,22 +7,42 @@ Graphical BootSetup.
 __copyright__ = 'Copyright 2013-2014, Salix OS'
 __license__ = 'GPL2+'
 
+import os
+import sys
 import gettext
 import gtk
 import gtk.glade
-import os
-from common import *
+from bootsetup import *
 from gathergui import *
 
-def run_setup(app_name, locale_dir, version, bootloader, target_partition, is_test, use_test_data):
-  gettext.install(app_name, locale_dir, True)
-  gtk.glade.bindtextdomain(app_name, locale_dir)
-  gtk.glade.textdomain(app_name)
-  if not (is_test and use_test_data) and os.getuid() != 0:
-    error_dialog(_("Root privileges are required to run this program."), _("Sorry!"))
-    sys.exit(1)
-  GatherGui(version, bootloader, target_partition, is_test, use_test_data)
-  # indicates to gtk (and gdk) that we will use threads
-  gtk.gdk.threads_init()
-  # start the main gtk loop
-  gtk.main()
+class BootSetupGtk(BootSetup):
+  def run_setup(self):
+    gtk.glade.bindtextdomain(self._appName, self._localeDir)
+    gtk.glade.textdomain(self._appName)
+    if not (self._isTest and self._useTestData) and os.getuid() != 0:
+      self.error_dialog(_("Root privileges are required to run this program."), _("Sorry!"))
+      sys.exit(1)
+    gg = GatherGui(self, self._version, self._bootloader, self._targetPartition, self._isTest, self._useTestData)
+    gg.run()
+  
+  def info_dialog(self, message, title = None, parent = None):
+    dialog = gtk.MessageDialog(parent = parent, type = gtk.MESSAGE_INFO, buttons = gtk.BUTTONS_OK, flags = gtk.DIALOG_MODAL)
+    if title:
+      msg = "<b>{0}</b>\n\n{1}".format(title, message)
+    else:
+      msg = message
+    dialog.set_markup(msg)
+    result_info = dialog.run()
+    dialog.destroy()
+    return result_info
+
+  def error_dialog(self, message, title = None, parent = None):
+    dialog = gtk.MessageDialog(parent = parent, type = gtk.MESSAGE_ERROR, buttons = gtk.BUTTONS_CLOSE, flags = gtk.DIALOG_MODAL)
+    if title:
+      msg = "<b>{0}</b>\n\n{1}".format(title, message)
+    else:
+      msg = message
+    dialog.set_markup(msg)
+    result_error = dialog.run()
+    dialog.destroy()
+    return result_error

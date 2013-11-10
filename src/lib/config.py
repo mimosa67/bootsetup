@@ -15,6 +15,16 @@ class Config:
   """
   Configuration for BootSetup
   """
+  disks = []
+  partitions = []
+  boot_partitions = []
+  cur_bootloader = None
+  cur_boot_partition = None
+  cur_mbr_device = None
+  is_test = False
+  use_test_data = False
+  is_live = False
+  
   def __init__(self, bootloader, target_partition, is_test, use_test_data):
     self.cur_bootloader = bootloader
     self.cur_boot_partition = target_partition and re.sub(r'/dev/', '', target_partition) or ''

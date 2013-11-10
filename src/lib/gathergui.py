@@ -24,7 +24,8 @@ class GatherGui:
   """
   GUI to gather information about the configuration to setup.
   """
-  def __init__(self, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
+  def __init__(self, bootsetup, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
+    self._bootsetup = bootsetup
     self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
     print """
 bootloader         = {bootloader}
@@ -84,6 +85,12 @@ a boot menu if several operating systems are available on the same computer.")
     self.update_buttons()
     # Connect signals
     builder.connect_signals(self)
+
+  def run(self):
+    # indicates to gtk (and gdk) that we will use threads
+    gtk.gdk.threads_init()
+    # start the main gtk loop
+    gtk.main()
 
   def _add_combobox_cell_renderer(self, comboBox, modelPosition, start=False, expand=False, padding=0):
     cell = gtk.CellRendererText()
@@ -236,9 +243,9 @@ click on this button to install your bootloader."))
     row_number = int(row_number)
     max_chars = 15
     if ' ' in new_text:
-      error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
     elif len(new_text) > max_chars:
-      error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
     else:
       model, it = self.BootPartitionTreeview.get_selection().get_selected()
       found = False
@@ -249,7 +256,7 @@ click on this button to install your bootloader."))
           found = True
           break
       if found:
-        error_dialog(_("You have used the same label for different Operating Systems. Please verify and correct.\n"))
+        self._bootsetup.error_dialog(_("You have used the same label for different Operating Systems. Please verify and correct.\n"))
       else:
         model.set_value(it, 3, new_text)
         if new_text == _("Set..."):
@@ -328,7 +335,7 @@ click on this button to install your bootloader."))
     if self.cfg.cur_boot_partition:
       self.lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
     else:
-      error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
+      self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
 
   def on_edit_button_clicked(self, widget, data=None):
     lilocfg = self.lilo.getConfigurationPath()
@@ -340,7 +347,7 @@ click on this button to install your bootloader."))
       try:
         sltl.execCall(['xdg-open', lilocfg], shell=False, env=None)
       except:
-        error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
+        self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
 
   def on_undo_button_clicked(self, widget, data=None):
     lilocfg = self.lilo.getConfigurationPath()
@@ -388,5 +395,5 @@ click on this button to install your bootloader."))
   def installation_done(self):
     print "Bootloader Installation Done."
     msg = "<b>{0}</b>".format(_("Bootloader installation process completed..."))
-    info_dialog(msg)
+    self._bootsetup.info_dialog(msg)
     self.gtk_main_quit(self.Window)

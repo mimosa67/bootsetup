@@ -23,9 +23,7 @@ wicd-curses.
 #       MA 02110-1301, USA.
 
 import urwid
-
-from wicd.translations import _
-
+import gettext
 
 # Uses code that is towards the bottom
 def error(ui, parent, message):
@@ -623,7 +621,7 @@ class TextDialog(Dialog2):
     def __init__(self, text, height, width, header=None, align='left',
         buttons=(_('OK'), 1)):
         l = [urwid.Text(text)]
-        body = urwid.ListBox(l)
+        body = urwid.ListBox(urwid.SimpleListWalker(l))
         body = urwid.AttrWrap(body, 'body')
 
         Dialog2.__init__(self, header, height + 2, width + 2, body)
@@ -644,7 +642,7 @@ class InputDialog(Dialog2):
     """ Simple dialog with text and entry. """
     def __init__(self, text, height, width, ok_name=_('OK'), edit_text=''):
         self.edit = urwid.Edit(wrap='clip', edit_text=edit_text)
-        body = urwid.ListBox([self.edit])
+        body = urwid.ListBox(urwid.SimpleListWalker([self.edit]))
         body = urwid.AttrWrap(body, 'editbx', 'editfc')
 
         Dialog2.__init__(self, text, height, width, body)
