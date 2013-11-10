@@ -16,6 +16,7 @@ import subprocess
 from common import *
 from config import *
 import salix_livetools_library as sltl
+import urwid_wicd.curses_misc as urwicd
 from lilo import *
 from grub2 import *
 
@@ -30,7 +31,8 @@ class GatherCurses:
   _palette = [
       ('body', 'default', 'default'),
       ('header', 'dark red', 'light gray', 'bold'),
-      ('footer', 'dark blue', 'light gray', 'bold'),
+      ('footer', 'light green', 'dark gray', 'bold'),
+      ('footer_key', 'yellow', 'black', 'bold'),
     ]
   _view = None
   _loop = None
@@ -52,8 +54,14 @@ boot partitions:{boot_partitions}
     ui = urwid.raw_display.Screen()
     ui.set_mouse_tracking()
     self._createView()
-    self._loop = urwid.MainLoop(self._view, self._palette, unhandled_input = self._unhandled_input)
+    self._loop = urwid.MainLoop(self._view, self._palette, handle_mouse = True, unhandled_input = self._handleKeys)
     self._loop.run()
+
+  def _createCenterButtonsWidget(self, buttons, h_sep = 0, v_sep = 0):
+    maxLen = 0
+    for button in buttons:
+      maxLen = max(maxLen, len(button.get_label()))
+    return urwid.GridFlow(buttons, cell_width = maxLen + len('<  >'), h_sep = h_sep, v_sep = v_sep, align = "center")
 
   def _createView(self):
     """
@@ -74,22 +82,57 @@ boot partitions:{boot_partitions}
 | <Undo custom config>                  | --+
 | <Install>                             |
 +=======================================+
-| H: Help, A: About, Q: Quit            |
+| H: Help, A: About, Q: Quit            | <== Action keyboard thanks to wicd
 +=======================================+
     """
-    txtTitle = urwid.Text("BootSetup curses, version {ver}".format(ver = self._version), align = "center")
-    txtIntro = urwid.Text("Introduction text")
-    txtFooter = urwid.Text("H: Help, A: About, Q: Quit")
+    txtTitle = urwid.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
     header = urwid.AttrMap(txtTitle, 'header')
-    footer = urwid.AttrMap(txtFooter, 'footer')
-    pile = urwid.Pile([txtIntro])
-    body = urwid.Filler(pile)
-    frame = urwid.Frame(body, header, footer)
+    keys = [
+        ('H', " " + _("Help")),
+        ('A', " " + _("About")),
+        ('Q', " " + _("Quit"))
+      ]
+    keysColumns = urwicd.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
+    footer = urwid.AttrMap(keysColumns, 'footer')
+    txtIntro = urwid.Text(_("Introduction text"))
+    
+    lblBootloader = urwid.Text(_("Bootloader:"))
+    radioGroupBootloader = []
+    radioLiLo = urwid.RadioButton(radioGroupBootloader, "LiLo", on_state_change = self._onLiLoChange)
+    radioGrub2 = urwid.RadioButton(radioGroupBootloader, "Grub2", on_state_change = self._onGrub2Change)
+    bootloaderTypeSection = urwid.Columns([lblBootloader, radioLiLo, radioGrub2], focus_column = 1)
+
+    mbrDeviceSection =self._createMbrDeviceSectionView()
+
+    bootloaderSection = self._createBootloaderSectionView()
+
+    btnInstall = urwid.Button(_("Install"), on_press = self._onInstall)
+    installSection = self._createCenterButtonsWidget([btnInstall])
+
+    bodyList = [txtIntro, urwid.Divider('─'), bootloaderTypeSection, mbrDeviceSection, bootloaderSection, urwid.Divider('─'), installSection]
+
+    body = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(bodyList)), 'body')
+    frame = urwid.Frame(body, header, footer, focus_part = 'body')
     self._view = frame
 
-  def _unhandled_input(self, key):
+  def _createMbrDeviceSectionView(self):
+    return urwid.WidgetPlaceholder(urwid.Text("mbr device section"))
+
+  def _createBootloaderSectionView(self):
+    return urwid.WidgetPlaceholder(urwid.Text("bootloader section"))
+
+  def _handleKeys(self, key):
     if key in ('q', 'Q'):
       self.main_quit()
+
+  def _onLiLoChange(self, radioLiLo, newState):
+    pass
+
+  def _onGrub2Change(self, radioGrub2, newState):
+    pass
+
+  def _onInstall(self, btnInstall):
+    pass
 
   def main_quit(self):
     if self.lilo:
