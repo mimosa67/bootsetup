@@ -14,7 +14,6 @@ import gtk.glade
 import re
 import math
 import subprocess
-from common import *
 from config import *
 import salix_livetools_library as sltl
 from lilo import *

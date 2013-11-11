@@ -52,15 +52,15 @@ class Config:
             ['sdb', 'SGT350 (350GB)']
           ]
       self.partitions = [
-            ['sda1', 'ntfs', 'WinVista (20GB)'],
-            ['sda5', 'ext2', 'Salix (80GB)'],
-            ['sdb1', 'fat32', 'Data (300GB)'],
-            ['sdb2', 'ext4', 'Debian (50GB)']
+            ['sda1', 'ntfs', u'WinVista (20GB)'],
+            ['sda5', 'ext2', u'Salix (80GB)'],
+            ['sdb1', 'fat32', u'Data (300GB)'],
+            ['sdb2', 'ext4', u'Debian (50GB)']
           ]
       self.boot_partitions = [
-            ['sda5', 'ext2', 'linux', 'Salix', 'Salix 14.0'],
-            ['sda1', 'ntfs', 'chain', 'Windows', 'Vista'],
-            ['sdb2', 'ext4', 'linux', 'Debian', 'Debian 7']
+            ['sda5', 'ext2', 'linux', u'Salix', u'Salix 14.0'],
+            ['sda1', 'ntfs', 'chain', u'Windows', u'Vista'],
+            ['sdb2', 'ext4', 'linux', u'Debian', u'Debian 7']
           ]
       if not self.cur_boot_partition:
         self.cut_boot_partition = 'sda5'
@@ -75,7 +75,7 @@ class Config:
           self.partitions.append([p, pi['fstype'], "{0} ({1})".format(pi['label'], pi['sizeHuman'])])
       self.boot_partitions = []
       probes = sltl.execGetOutput('/usr/sbin/os-prober', shell = False)
-      self.__debug("Probes: " + str(probes))
+      self.__debug("Probes: " + unicode(probes))
       if not self.is_live:
         # os-prober doesn't want to probe for /
         slashDevice = sltl.execGetOutput(r"readlink -f $(df / | tail -n 1 | cut -d' ' -f1)")[0]
@@ -83,9 +83,9 @@ class Config:
         self.__debug("Root device {0} ({1})".format(slashDevice, slashFS))
         self.__debug("/usr/lib/os-probes/mounted/90linux-distro " + slashDevice + " / " + slashFS)
         probes[0:0] = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
-      self.__debug("Probes: " + str(probes))
+      self.__debug("Probes: " + unicode(probes))
       for probe in probes:
-        probe = probe.strip() # ensure clean line
+        probe = unicode(probe).strip() # ensure clean line
         if probe[0] != '/':
           continue
         probe_info = probe.split(':')

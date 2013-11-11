@@ -135,7 +135,7 @@ class Grub2:
     mp = None
     try:
       mp = self._mountBootPartition(bootPartition)
-      self.__debug("mp = " + str(mp))
+      self.__debug("mp = " + unicode(mp))
       self._mountBootInBootPartition(mp)
       if self._copyAndInstallGrub2(mp, mbrDevice):
         self._installGrub2Config(mp)

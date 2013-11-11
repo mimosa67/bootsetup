@@ -459,7 +459,7 @@ class ComboBox(urwid.WidgetWrap):
 
         self.cbox = DynWrap(SelText([self.list[index] + self.DOWN_ARROW]),
             attrs=self.attrs, focus_attr=self.focus_attr)
-        if str != '':
+        if s != '':
             w = urwid.Columns([('fixed', len(s), self.label), self.cbox],
                 dividechars=1)
             self.overlay = self.ComboSpace(self.list, parent, ui, index,
@@ -546,7 +546,7 @@ class Dialog2(urwid.WidgetWrap):
                 urwid.Text(text, align='right'),
                 urwid.Divider()
             ])
-        w = self.frame
+        w = urwid.AttrWrap(self.frame, 'body')
         self.view = w
 
     # buttons: tuple of name,exitcode
