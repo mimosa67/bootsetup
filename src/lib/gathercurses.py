@@ -258,10 +258,14 @@ a boot menu if several operating systems are available on the same computer.")
       return 'ok'
 
   def _onLabelChange(self, editLabel, newText, device):
-    valid = self._isLabelValid(newText)
-    if valid == 'space':
+    validOld = self._isLabelValid(editLabel.edit_text)
+    if validOld == 'ok':
+      validNew = self._isLabelValid(newText)
+    else:
+      validNew = 'pass'
+    if validNew == 'space':
       self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
-    elif valid == 'max':
+    elif validNew == 'max':
       self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
     else:
       self._labelPerDevice[device] = newText
@@ -330,7 +334,18 @@ a boot menu if several operating systems are available on the same computer.")
     self._custom_lilo = False
 
   def _onInstall(self, btnInstall):
-    self._infoDialog(u"TODO install\n" + unicode(self._labelPerDevice))
+    if self.cfg.cur_bootloader == 'lilo':
+      if not os.path.exists(self._lilo.getConfigurationPath()):
+        self._create_lilo_config()
+      self._lilo.install()
+    elif self.cfg.cur_bootloader == 'grub2':
+      self._grub2.install(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition)
+    self.installation_done()
+
+  def installation_done(self):
+    print "Bootloader Installation Done."
+    msg = _("Bootloader installation process completed...")
+    self._bootsetup.info_dialog(msg)
     self.main_quit()
 
   def main_quit(self):
