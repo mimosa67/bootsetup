@@ -90,8 +90,8 @@ class Config:
           continue
         probe_info = probe.split(':')
         probe_dev = re.sub(r'/dev/', '', probe_info[0])
-        probe_label = probe_info[1]
-        probe_os = probe_info[2]
+        probe_os = probe_info[1]
+        probe_label = probe_info[2]
         probe_boottype = probe_info[3]
         try:
           probe_fstype = [p[1] for p in self.partitions if p[0] == probe_dev][0]

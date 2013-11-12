@@ -44,6 +44,11 @@ class GatherCurses:
   _comboBoxes = [] # hack for ComboBox
   _comboBoxArrow = "   ↓"
   _labelPerDevice = {}
+  _lilo = None
+  _grub2 = None
+  _editing = False
+  _custom_lilo = False
+  _liloMaxChars = 15
 
   def __init__(self, bootsetup, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
     self._bootsetup = bootsetup
@@ -57,7 +62,6 @@ disks:{disks}
 partitions:{partitions}
 boot partitions:{boot_partitions}
 """.format(bootloader = self.cfg.cur_bootloader, partition = self.cfg.cur_boot_partition, mbr = self.cfg.cur_mbr_device, disks = "\n - " + "\n - ".join(map(" ".join, self.cfg.disks)), partitions = "\n - " + "\n - ".join(map(" ".join, self.cfg.partitions)), boot_partitions = "\n - " + "\n - ".join(map(" ".join, self.cfg.boot_partitions)))
-    self.lilo = self.grub2 = None
     self.ui = urwid.raw_display.Screen()
     self.ui.set_mouse_tracking()
     self._palette.extend(bootsetup._palette)
@@ -180,10 +184,13 @@ a boot menu if several operating systems are available on the same computer.")
 
   def _createBootloaderSectionView(self):
     if self.cfg.cur_bootloader == 'lilo':
-      listDev = [urwid.Text(_("Partition"))]
-      listFS = [urwid.Text(_("File system"))]
+      listDevTitle = _("Partition")
+      listFSTitle = _("File system")
+      listLabelTitle = _("Boot menu label")
+      listDev = [urwid.Text(listDevTitle)]
+      listFS = [urwid.Text(listFSTitle)]
       listType = [urwid.Text(_("Operating system"))]
-      listLabel = [urwid.Text(_("Boot menu label"))]
+      listLabel = [urwid.Text(listLabelTitle)]
       listAction = [urwid.Text("")]
       self._labelPerDevice = {}
       for p in self.cfg.boot_partitions:
@@ -204,7 +211,7 @@ a boot menu if several operating systems are available on the same computer.")
       colType = urwid.Pile(listType)
       colLabel = urwid.Pile(listLabel)
       colAction = urwid.Pile(listAction)
-      self._liloTable = urwid.Columns([colDev, colFS, colType, colLabel, colAction])
+      self._liloTable = urwid.Columns([('fixed', max(6, len(listDevTitle)), colDev), ('fixed', max(6, len(listFSTitle)), colFS), colType, ('fixed', max(self._liloMaxChars + 1, len(listLabelTitle)), colLabel), ('fixed', 11, colAction)], dividechars = 1)
       table = urwid.LineBox(self._liloTable)
       btnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editLiLoConf)
       btnCancel = self._createButton(_("_Undo configuration").replace("_", ""), on_press = self._cancelLiLoConf)
@@ -229,22 +236,42 @@ a boot menu if several operating systems are available on the same computer.")
   def _onLiLoChange(self, radioLiLo, newState):
     if newState:
       self.cfg.cur_bootloader = 'lilo'
+      if self._grub2:
+        self._grub2 = None
+      self._lilo = Lilo(self.cfg.is_test)
       self._changeBootloaderSection()
 
   def _onGrub2Change(self, radioGrub2, newState):
     if newState:
       self.cfg.cur_bootloader = 'grub2'
+      if self._lilo:
+        self._lilo = None
+      self._grub2 = Grub2(self.cfg.is_test)
       self._changeBootloaderSection()
 
+  def _isLabelValid(self, label):
+    if ' ' in label:
+      return 'space'
+    elif len(label) > self._liloMaxChars:
+      return 'max'
+    else:
+      return 'ok'
+
   def _onLabelChange(self, editLabel, newText, device):
-    self._labelPerDevice[device] = newText
+    valid = self._isLabelValid(newText)
+    if valid == 'space':
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+    elif valid == 'max':
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
+    else:
+      self._labelPerDevice[device] = newText
 
   def _findDevPosition(self, device):
     colDevice = self._liloTable.widget_list[0]
     for i, line in enumerate(colDevice.widget_list):
       if i == 0: # skip header
         continue
-      if line.get_text()[0] == device:
+      if line.text == device:
         return i
     return None
 
@@ -264,20 +291,52 @@ a boot menu if several operating systems are available on the same computer.")
         del col.widget_list[pos]
         col.widget_list.insert(pos + 1, old)
 
+  def _create_lilo_config(self):
+    partitions = []
+    self.cfg.cur_boot_partition = None
+    for p in self.cfg.boot_partitions:
+      dev = p[0]
+      fs = p[1]
+      t = p[2]
+      label = self._labelPerDevice[dev]
+      if not self.cfg.cur_boot_partition and t == 'linux':
+        self.cfg.cur_boot_partition = dev
+      partitions.append([dev, fs, t, label])
+    if self.cfg.cur_boot_partition:
+      self._lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
+    else:
+      self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
+
   def _editLiLoConf(self, button):
-    self._infoDialog(u"TODO edit…")
+    lilocfg = self._lilo.getConfigurationPath()
+    if not os.path.exists(lilocfg):
+      self._custom_lilo = True
+      self._create_lilo_config()
+    if os.path.exists(lilocfg):
+      launched = False
+      for editor in ('vim', 'nano'):
+        try:
+          sltl.execCall([editor, lilocfg], shell=False, env=None)
+          launched = True
+        except:
+          pass
+      if not launched:
+        self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
 
   def _cancelLiLoConf(self, button):
-    self._infoDialog(u"TODO cancel…")
+    lilocfg = self._lilo.getConfigurationPath()
+    if os.path.exists(lilocfg):
+      os.remove(lilocfg)
+    self._custom_lilo = False
 
   def _onInstall(self, btnInstall):
     self._infoDialog(u"TODO install\n" + unicode(self._labelPerDevice))
     self.main_quit()
 
   def main_quit(self):
-    if self.lilo:
-      del self.lilo
-    if self.grub2:
-      del self.grub2
+    if self._lilo:
+      del self._lilo
+    if self._grub2:
+      del self._grub2
     print "Bye _o/"
     raise urwid.ExitMainLoop()
