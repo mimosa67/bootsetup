@@ -1,0 +1,190 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-11-12 11:23+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/resources/bootsetup.glade:10
+msgid "About BootSetup"
+msgstr ""
+
+#: src/resources/bootsetup.glade:22
+msgid "Helps setup a bootloader like LiLo or Grub2."
+msgstr ""
+
+#. Define your name and email here.
+#: src/resources/bootsetup.glade:44
+msgid "translator_name <translator@email.com>"
+msgstr ""
+
+#: src/resources/bootsetup.glade:194 data/bootsetup.desktop.in.h:1
+msgid "BootSetup"
+msgstr ""
+
+#: src/resources/bootsetup.glade:323
+msgid "Install bootloader on:"
+msgstr ""
+
+#: src/resources/bootsetup.glade:389
+msgid "Partition"
+msgstr ""
+
+#: src/resources/bootsetup.glade:401
+msgid "File system"
+msgstr ""
+
+#: src/resources/bootsetup.glade:413
+msgid "Operating system"
+msgstr ""
+
+#: src/resources/bootsetup.glade:426
+msgid "Boot menu label"
+msgstr ""
+
+#: src/resources/bootsetup.glade:571
+msgid "_Undo configuration"
+msgstr ""
+
+#: src/resources/bootsetup.glade:626
+msgid "_Edit configuration"
+msgstr ""
+
+#: src/resources/bootsetup.glade:679
+msgid "Install Grub2 files on:"
+msgstr ""
+
+#: src/resources/bootsetup.glade:789
+msgid "_Install bootloader"
+msgstr ""
+
+#: src/lib/bootsetup_curses.py:17 src/lib/bootsetup_gtk.py:22
+msgid "Root privileges are required to run this program."
+msgstr ""
+
+#: src/lib/bootsetup_curses.py:17 src/lib/bootsetup_gtk.py:22
+msgid "Sorry!"
+msgstr ""
+
+#: src/lib/gathergui.py:75
+msgid ""
+"<b>BootSetup will install a new bootloader on your computer.</b> \n"
+"\n"
+"A bootloader is required to load the main operating system of a computer and "
+"will initially display a boot menu if several operating systems are "
+"available on the same computer."
+msgstr ""
+
+#: src/lib/gathergui.py:103
+msgid "About BootSetup."
+msgstr ""
+
+#: src/lib/gathergui.py:106
+msgid ""
+"Here you must define a boot menu label for each of the operating system that "
+"will be displayed on your bootloader menu.\n"
+"Any partition for which you do not set a boot menu label will not be "
+"configured and will not be displayed on the bootloader menu.\n"
+"If a few kernels are available within one partition, the label you have "
+"chosen for that partition will be appended numerically to create multiple "
+"menu entries for each of these kernels.\n"
+"Any of these settings can be edited manually in the configuration file."
+msgstr ""
+
+#: src/lib/gathergui.py:115
+msgid ""
+"Use this arrow if you want to move the selected Operating System up to a "
+"higher rank.\n"
+"The partition with the highest rank will be displayed on the first line of "
+"the bootloader menu.\n"
+"Any of these settings can be edited manually in the configuration file."
+msgstr ""
+
+#: src/lib/gathergui.py:121
+msgid ""
+"Use this arrow if you want to move the selected Operating System down to a "
+"lower rank.\n"
+"The partition with the lowest rank will be displayed on the last line of the "
+"bootloader menu.\n"
+"Any of these settings can be edited manually in the configuration file."
+msgstr ""
+
+#: src/lib/gathergui.py:127
+msgid "This will undo all settings (even manual modifications)."
+msgstr ""
+
+#: src/lib/gathergui.py:130
+msgid ""
+"Experienced users have the possibility to manually edit the LiLo "
+"configuration file.\n"
+"Please do not temper with this file unless you know what you are doing and "
+"you have read its commented instructions regarding chrooted paths."
+msgstr ""
+
+#: src/lib/gathergui.py:136
+msgid "Exit BootSetup program."
+msgstr ""
+
+#: src/lib/gathergui.py:139
+msgid ""
+"Once you have defined your settings, click on this button to install your "
+"bootloader."
+msgstr ""
+
+#: src/lib/gathergui.py:239
+msgid ""
+"\n"
+"An Operating System label should not contain any space.\n"
+"\n"
+"Please verify and correct.\n"
+msgstr ""
+
+#: src/lib/gathergui.py:241
+msgid ""
+"\n"
+"An Operating System label should not hold more than {max} characters.\n"
+"\n"
+"Please verify and correct.\n"
+msgstr ""
+
+#: src/lib/gathergui.py:246 src/lib/gathergui.py:255
+msgid "Set..."
+msgstr ""
+
+#: src/lib/gathergui.py:252
+msgid ""
+"You have used the same label for different Operating Systems. Please verify "
+"and correct.\n"
+msgstr ""
+
+#: src/lib/gathergui.py:331
+msgid ""
+"Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot "
+"entries, so cannot install LiLo.\n"
+msgstr ""
+
+#: src/lib/gathergui.py:343
+msgid ""
+"Sorry, BootSetup is unable to find a suitable text editor in your system. "
+"You will not be able to manually modify the LiLo configuration.\n"
+msgstr ""
+
+#: src/lib/gathergui.py:390
+msgid "Bootloader installation process completed..."
+msgstr ""
+
+#: data/bootsetup.desktop.in.h:2
+msgid "Install a bootloader, LiLo or Grub2"
+msgstr ""

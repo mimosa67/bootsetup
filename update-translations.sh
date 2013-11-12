@@ -6,7 +6,7 @@ xgettext --from-code=utf-8 \
 	-o data/po/bootsetup.pot \
 	src/resources/bootsetup.glade
 # update data/po/bootsetup.pot template file from python files
-for p in src/lib/*.py; do
+for p in src/bootsetup.py src/lib/*.py; do
   xgettext --from-code=utf-8 \
     -j \
     -L Python \
