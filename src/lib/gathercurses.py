@@ -322,6 +322,7 @@ a boot menu if several operating systems are available on the same computer.")
         try:
           sltl.execCall([editor, lilocfg], shell=False, env=None)
           launched = True
+          break
         except:
           pass
       if not launched:
