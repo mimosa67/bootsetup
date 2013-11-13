@@ -107,8 +107,8 @@ class DynWrap(urwid.AttrWrap):
 class DynEdit(DynWrap):
     """ Edit DynWrap'ed to the most common specifications. """
     # pylint: disable-msg=W0231
-    def __init__(self, caption='', edit_text='', sensitive=True,
-      attrs=('editbx', 'editnfc'), focus_attr='editfc'):
+    def __init__(self, caption='', edit_text='', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None,
+      sensitive=True, attrs=('editbx', 'editnfc'), focus_attr='editfc'):
         caption = ('editcp', caption + ': ')
         edit = urwid.Edit(caption, edit_text)
         # pylint: disable-msg=E1101

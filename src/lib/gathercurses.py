@@ -10,12 +10,12 @@ __license__ = 'GPL2+'
 import gettext
 import gobject
 import urwid
+import urwid_more
 import re
 import math
 import subprocess
 from config import *
 import salix_livetools_library as sltl
-import urwid_wicd.curses_misc as urwicd
 from lilo import *
 from grub2 import *
 
@@ -36,6 +36,7 @@ class GatherCurses:
       ('non_focusable', 'brown', 'black'),
       ('focus', 'black', 'light green'),
       ('focus_edit', 'yellow', 'black'),
+      ('focus_radio', 'yellow', 'black'),
       ('combobody', 'black', 'light gray'),
       ('combofocus', 'black', 'light green'),
     ]
@@ -65,6 +66,7 @@ boot partitions:{boot_partitions}
     self.ui = urwid.raw_display.Screen()
     self.ui.set_mouse_tracking()
     self._palette.extend(bootsetup._palette)
+    #urwid.register_signal(urwid.Widget, 'focuslost')
   
   def run(self):
     self._createView()
@@ -74,9 +76,9 @@ boot partitions:{boot_partitions}
     for c in self._comboBoxes:
       c.build_combobox(self._view, self._loop.screen, c.displayRows)
     if self.cfg.cur_bootloader == 'lilo':
-      self._radioLiLo.set_state(True)
+      self._radioLiLo.original_widget.set_state(True)
     elif self.cfg.cur_bootloader == 'grub2':
-      self._radioGrub2.set_state(True)
+      self._radioGrub2.original_widget.set_state(True)
     self._loop.run()
   
   def _infoDialog(self, message):
@@ -95,17 +97,15 @@ boot partitions:{boot_partitions}
     return comboBox
 
   def _createEdit(self, caption = u'', edit_text = u'', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None):
-    edit = urwid.Edit(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
-    return urwid.AttrMap(edit, 'focusable', 'focus_edit')
+    edit = urwid_more.DynEdit(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus_edit')
+    return edit
 
   def _createButton(self, label, on_press = None, user_data = None):
-    btn = urwid.Button(label, on_press, user_data)
-    return urwid.AttrMap(btn, 'focusable', 'focus')
+    btn = urwid_more.DynButton(label, on_press, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus')
+    return btn
 
   def _createRadioButton(self, group, label, state = "first True", on_state_change = None, user_data = None):
-    if isinstance(label, basestring):
-      label = ('focusable', label)
-    radio = urwid.RadioButton(group, label, state, on_state_change, user_data)
+    radio = urwid_more.DynRadioButton(group, label, state, on_state_change, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus_radio')
     return radio
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 2, v_sep = 0):
@@ -146,7 +146,7 @@ boot partitions:{boot_partitions}
         ('A', " " + _("About")),
         ('Q / F10', " " + _("Quit")),
       ]
-    keysColumns = urwicd.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
+    keysColumns = urwid_more.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
     footer = urwid.AttrMap(keysColumns, 'footer')
     # intro
     introHtml = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
@@ -179,7 +179,7 @@ a boot menu if several operating systems are available on the same computer.")
     comboList = []
     for d in self.cfg.disks:
       comboList.append(" - ".join(d))
-    comboBox = self._hackComboBox(urwicd.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
+    comboBox = self._hackComboBox(urwid_more.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -221,7 +221,7 @@ a boot menu if several operating systems are available on the same computer.")
       comboList = []
       for p in self.cfg.partitions:
         comboList.append(" - ".join(p))
-      comboBox = self._hackComboBox(urwicd.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
+      comboBox = self._hackComboBox(urwid_more.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
       return comboBox
     else:
       return urwid.Text("")
