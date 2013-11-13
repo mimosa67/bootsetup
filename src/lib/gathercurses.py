@@ -66,7 +66,6 @@ boot partitions:{boot_partitions}
     self.ui = urwid.raw_display.Screen()
     self.ui.set_mouse_tracking()
     self._palette.extend(bootsetup._palette)
-    #urwid.register_signal(urwid.Widget, 'focuslost')
   
   def run(self):
     self._createView()

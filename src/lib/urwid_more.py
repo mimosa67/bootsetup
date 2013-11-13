@@ -29,11 +29,82 @@ class NSelListBox(urwid.ListBox):
     return False
 
 
+FOCUSLOST_EVENT = 'focuslost'
+
+class FocusLostWidgetBehavior(object):
+  """
+  This object trigger the 'focuslost' event if it looses the focus.
+  """
+  def _register_focus_lost(self):
+    urwid.register_signal(self.__class__, FOCUSLOST_EVENT)
+
+  def _loose_focus(self):
+    """
+    This should be called when this widget looses the focus.
+    """
+    urwid.emit_signal(self, FOCUSLOST_EVENT, self)
+
+
+class SensitiveWidgetBehavior(object):
+  """
+  Makes an object have mutable selectivity.
+  """
+  def _init_sensitive(self, sensitive, sensitive_attr, unsensitive_attr = None):
+    """
+    sensitive = boolean indicating if the widget is sensitive or not.
+    sensitive_attr = tuple of (attr, focus_attr) when sensitive
+    unsensitive_attr = tuple of (attr, focus_attr) when not sensitive, default to sensitive if None
+      attr = attribute to apply to w
+      focus_attr = attribute to apply when in focus, if None use attr
+    """
+    assert sensitive_attr, "sensitive_attr must be defined."
+    self.set_sensitive_attr(sensitive_attr)
+    if not unsensitive_attr:
+      unsensitive_attr = sensitive_attr
+    self.set_unsensitive_attr(unsensitive_attr)
+    self.set_sensitive(sensitive)
+
+  def get_sensitive_attr(self):
+    return self._sensitive_attr
+  def set_sensitive_attr(self, sensitive_attr):
+    self._sensitive_attr = sensitive_attr
+  sensitive_attr = property(get_sensitive_attr, set_sensitive_attr)
+  
+  def get_unsensitive_attr(self):
+    return self._unsensitive_attr
+  def set_unsensitive_attr(self, unsensitive_attr):
+    self._unsensitive_attr = unsensitive_attr
+  unsensitive_attr = property(get_unsensitive_attr, set_unsensitive_attr)
+  
+  def get_sensitive(self):
+    return self._sensitive
+  def set_sensitive(self, state):
+    self._sensitive = state
+  sensitive = property(get_sensitive, set_sensitive)
+
+  def selectable(self):
+    return self.get_sensitive()
+  
+  def render(self, size, focus = False):
+    """ Taken from AttrMap """
+    if self._sensitive:
+      attr_tuple = self._sensitive_attr
+    else:
+      attr_tuple = self._unsensitive_attr
+    if focus and attr_tuple[1]:
+      attr_map = attr_tuple[1]
+    else:
+      attr_map = attr_tuple[0]
+    canv = super(self.__class__).render(size, focus = focus) # WORKING ?
+    canv = CompositeCanvas(canv)
+    canv.fill_attr_apply(attr_map)
+    return canv
+
+
 class DynWrap(urwid.AttrWrap):
   """
   Makes an object have mutable selectivity.
   Attributes will change like those in an AttrWrap
-  Makes this object trigger 'focuslost' event if it loose the focus.
 
   w = widget to wrap
   sensitive = current selectable state
@@ -109,6 +180,22 @@ class DynRadioButton(DynWrap):
   def __init__(self, group, label, state = 'first True', on_state_change = None, user_data = None, sensitive = True, attrs = ('body', 'editnfc'), focus_attr = 'body'):
     button = urwid.RadioButton(group, label, state, on_state_change, user_data)
     self.__super.__init__(button, sensitive, attrs, focus_attr)
+
+
+class EditMore(FocusLostWidgetBehavior, SensitiveWidgetBehavior, urwid.Edit):
+  """
+  Edit Widget, which handle 'focuslost' event and can be made unsensitive on demand
+  """
+  def __init__(self, caption='', edit_text='', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None,
+      sensitive = True, sensitive_attr = ('edit_nonfocus', 'edit_focus'), unsensitive_attr = None):
+    self._register_focus_lost()
+    self._init_sensitive(sensitive, sensitive_attr, unsensitive_attr)
+    super(self.__class__).__init__(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
+  def keypress(self, size, key):
+    key = super(self.__class__).keypress(size, key)
+    if key and self._command_map[key] in ('cursor up', 'cursor down'):
+      self._loose_focus(self)
+    return key
 
 
 class ComboBoxException(Exception):
