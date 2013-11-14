@@ -96,7 +96,7 @@ boot partitions:{boot_partitions}
     return comboBox
 
   def _createEdit(self, caption = u'', edit_text = u'', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None):
-    edit = urwid_more.DynEdit(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus_edit')
+    edit = urwid_more.EditMore(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
     return edit
 
   def _createButton(self, label, on_press = None, user_data = None):
@@ -202,13 +202,15 @@ a boot menu if several operating systems are available on the same computer.")
         listType.append(urwid.Text(ostype))
         self._labelPerDevice[dev] = label
         editLabel = self._createEdit(edit_text = label, wrap = 'clip')
-        urwid.connect_signal(editLabel.original_widget, 'change', self._onLabelChange, dev)
+        urwid.connect_signal(editLabel, 'change', self._onLabelChange, dev)
+        urwid.connect_signal(editLabel, 'focusgain', self._onLabelFocusGain, dev)
+        urwid.connect_signal(editLabel, 'focuslost', self._onLabelFocusLost, dev)
         listLabel.append(editLabel)
         listAction.append(urwid.GridFlow([self._createButton("↑", on_press = self._moveLineUp, user_data = p[0]), self._createButton("↓", on_press = self._moveLineDown, user_data = p[0])], cell_width = 5, h_sep = 1, v_sep = 1, align = "center"))
       colDev = urwid.Pile(listDev)
       colFS = urwid.Pile(listFS)
       colType = urwid.Pile(listType)
-      colLabel = urwid.Pile(listLabel)
+      colLabel = urwid_more.PileMore(listLabel)
       colAction = urwid.Pile(listAction)
       self._liloTable = urwid.Columns([('fixed', max(6, len(listDevTitle)), colDev), ('fixed', max(6, len(listFSTitle)), colFS), colType, ('fixed', max(self._liloMaxChars + 1, len(listLabelTitle)), colLabel), ('fixed', 11, colAction)], dividechars = 1)
       table = urwid.LineBox(self._liloTable)
@@ -268,6 +270,12 @@ a boot menu if several operating systems are available on the same computer.")
       self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
     else:
       self._labelPerDevice[device] = newText
+  
+  def _onLabelFocusGain(self, editLabel, device):
+    self._bootsetup.info_dialog("Focus Gain on " + device)
+  
+  def _onLabelFocusLost(self, editLabel, device):
+    self._bootsetup.info_dialog("Focus Lost on " + device)
 
   def _findDevPosition(self, device):
     colDevice = self._liloTable.widget_list[0]

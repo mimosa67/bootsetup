@@ -33,34 +33,30 @@ class BootSetupCurses(BootSetup):
     self.gc = GatherCurses(self, self._version, self._bootloader, self._targetPartition, self._isTest, self._useTestData)
     self.gc.run()
 
-  def info_dialog(self, message, title = None, parent = None):
-    if not title:
-      title = _("INFO")
-    dialog = urwid_more.TextDialog(('info', unicode(message)), 10, 60, ('important', unicode(title)))
-    if self.gc:
+  def _show_ui_dialog(self, dialog, parent = None):
+    if not parent:
+      parent = urwid.Filler(urwid.Divider(), 'top')
+    uiToStop = False
+    if self.gc and self.gc._loop:
       ui = self.gc._loop.screen
     else:
       ui = urwid.raw_display.Screen()
       ui.register_palette(self._palette)
+    if not ui._started:
+      uiToStop = True
       ui.start()
-    if not parent:
-      parent = urwid.Filler(urwid.Divider(), 'top')
     dialog.run(ui, parent)
-    if not self.gc:
+    if uiToStop:
       ui.stop()
+
+  def info_dialog(self, message, title = None, parent = None):
+    if not title:
+      title = _("INFO")
+    dialog = urwid_more.TextDialog(('info', unicode(message)), 10, 60, ('important', unicode(title)))
+    self._show_ui_dialog(dialog, parent)
 
   def error_dialog(self, message, title = None, parent = None):
     if not title:
       title = _("/!\ ERROR")
     dialog = urwid_more.TextDialog(('error', unicode(message)), 10, 60, ('important', unicode(title)))
-    if self.gc:
-      ui = self.gc._loop.screen
-    else:
-      ui = urwid.raw_display.Screen()
-      ui.register_palette(self._palette)
-      ui.start()
-    if not parent:
-      parent = urwid.Filler(urwid.Divider(), 'top')
-    dialog.run(ui, parent)
-    if not self.gc:
-      ui.stop()
+    self._show_ui_dialog(dialog, parent)

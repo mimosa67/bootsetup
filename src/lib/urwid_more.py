@@ -181,6 +181,8 @@ class PileMore(urwid.Pile, FocusEventWidget):
     item -- widget or integer index
     """
     ok = True
+    if not hasattr(self, "focus_item"):
+      self.focus_item = None
     focus_w = self.get_focus()
     if focus_w and isinstance(focus_w, FocusEventWidget):
       ok = focus_w.loose_focus()
