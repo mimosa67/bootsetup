@@ -11,38 +11,110 @@ __license__ = 'GPL2+'
 import urwid
 import gettext
 
-class SelText(urwid.Text):
-  """A selectable text widget. See urwid.Text."""
 
-  def selectable(self):
-    """Make widget selectable."""
+class FocusEventWidget(urwid.Widget):
+  signals = ['focusgain', 'focuslost'] # will be used by the metaclass of Widget to call register_signal
+  def _can_gain_focus(self):
     return True
+  def _can_loose_focus(self):
+    return True
+  def gain_focus(self):
+    print "gain focus", self
+    ret = self._can_gain_focus()
+    if ret:
+      self._emit('focusgain')
+    return ret
+  def loose_focus(self):
+    print "loose focus", self
+    ret = self._can_loose_focus()
+    if ret:
+      self._emit('focuslost')
+    return ret
 
-  def keypress(self, size, key):
-    """Don't handle any keys."""
-    return key
+
+class EditMore(urwid.Edit, FocusEventWidget):
+  pass
+
+class IntEditMore(urwid.IntEdit, FocusEventWidget):
+  pass
+
+class WidgetWrapMore(urwid.WidgetWrap, FocusEventWidget):
+  def _can_gain_focus(self):
+    if isinstance(self._w, FocusEventWidget):
+      return self._w._can_gain_focus()
+    else:
+      return FocusEventWidget._can_gain_focus(self)
+  def _can_loose_focus(self):
+    if isinstance(self._w, FocusEventWidget):
+      return self._w._can_loose_focus()
+    else:
+      return FocusEventWidget._can_loose_focus(self)
+  def gain_focus(self):
+    if isinstance(self._w, FocusEventWidget):
+      return self._w.gain_focus()
+    else
+      return FocusEventWidget.gain_focus(self)
+  def loose_focus(self):
+    if isinstance(self._w, FocusEventWidget):
+      return self._w.loose_focus()
+    else
+      return FocusEventWidget.loose_focus(self)
+
+class WidgetDecorationMore(urwid.WidgetDecoration, FocusEventWidget):
+  def _can_gain_focus(self):
+    if isinstance(self._original_widget, FocusEventWidget):
+      return self._original_widget._can_gain_focus()
+    else:
+      return FocusEventWidget._can_gain_focus(self)
+  def _can_loose_focus(self):
+    if isinstance(self._original_widget, FocusEventWidget):
+      return self._original_widget._can_loose_focus()
+    else:
+      return FocusEventWidget._can_loose_focus(self)
+  def gain_focus(self):
+    if isinstance(self._original_widget, FocusEventWidget):
+      return self._original_widget.gain_focus()
+    else
+      return FocusEventWidget.gain_focus(self)
+  def loose_focus(self):
+    if isinstance(self._original_widget, FocusEventWidget):
+      return self._original_widget.loose_focus()
+    else
+      return FocusEventWidget.loose_focus(self)
+
+class WidgetPlaceholderMore(urwid.WidgetPlaceholder, WidgetDecorationMore):
+  pass
+
+class AttrMapMore(urwid.AttrMap, WidgetDecorationMore):
+  pass
+
+class AttrWrapMore(urwid.AttrWrap, AttrMapMore):
+  pass
+
+class PaddingMore(urwid.Padding, WidgetDecorationMore):
+  pass
+
+class FillerMore(urwid.Filler, WidgetDecorationMore):
+  pass
+
+class BoxAdapterMore(urwid.BoxAdapter, WidgetDecorationMore):
+  pass
+
+class WidgetContainerMore(urwid.Widget, FocusEventWidget):
+  pass
 
 
-class NSelListBox(urwid.ListBox):
-  """ Non-selectable ListBox. """
-  def selectable(self):
-    return False
 
 
-FOCUSLOST_EVENT = 'focuslost'
 
-class FocusLostWidgetBehavior(object):
-  """
-  This object trigger the 'focuslost' event if it looses the focus.
-  """
-  def _register_focus_lost(self):
-    urwid.register_signal(self.__class__, FOCUSLOST_EVENT)
 
-  def _loose_focus(self):
-    """
-    This should be called when this widget looses the focus.
-    """
-    urwid.emit_signal(self, FOCUSLOST_EVENT, self)
+
+
+
+
+
+
+
 
 
 class SensitiveWidgetBehavior(object):
@@ -195,6 +267,18 @@ class EditMore(FocusLostWidgetBehavior, SensitiveWidgetBehavior, urwid.Edit):
     key = super(self.__class__).keypress(size, key)
     if key and self._command_map[key] in ('cursor up', 'cursor down'):
       self._loose_focus(self)
+    return key
+
+
+class SelText(urwid.Text):
+  """A selectable text widget. See urwid.Text."""
+
+  def selectable(self):
+    """Make widget selectable."""
+    return True
+
+  def keypress(self, size, key):
+    """Don't handle any keys."""
     return key
 
 
