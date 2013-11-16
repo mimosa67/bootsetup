@@ -10,7 +10,7 @@ __license__ = 'GPL2+'
 import gettext
 import gobject
 import urwid
-import urwid_more
+import urwid_more as urwidm
 import re
 import math
 import subprocess
@@ -96,15 +96,15 @@ boot partitions:{boot_partitions}
     return comboBox
 
   def _createEdit(self, caption = u'', edit_text = u'', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None):
-    edit = urwid_more.EditMore(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
+    edit = urwidm.EditMore(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
     return edit
 
   def _createButton(self, label, on_press = None, user_data = None):
-    btn = urwid_more.DynButton(label, on_press, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus')
+    btn = urwidm.DynButton(label, on_press, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus')
     return btn
 
   def _createRadioButton(self, group, label, state = "first True", on_state_change = None, user_data = None):
-    radio = urwid_more.DynRadioButton(group, label, state, on_state_change, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus_radio')
+    radio = urwidm.DynRadioButton(group, label, state, on_state_change, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus_radio')
     return radio
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 2, v_sep = 0):
@@ -138,15 +138,15 @@ boot partitions:{boot_partitions}
     """
     # header
     txtTitle = urwid.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
-    header = urwid.AttrMap(urwid.Pile([txtTitle, urwid.Divider()]), 'header')
+    header = urwidm.AttrMapMore(urwidm.PileMore([txtTitle, urwid.Divider()]), 'header')
     # footer
     keys = [
         ('H', " " + _("Help")),
         ('A', " " + _("About")),
         ('Q / F10', " " + _("Quit")),
       ]
-    keysColumns = urwid_more.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
-    footer = urwid.AttrMap(keysColumns, 'footer')
+    keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
+    footer = urwidm.AttrMapMore(keysColumns, 'footer')
     # intro
     introHtml = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
@@ -160,25 +160,26 @@ a boot menu if several operating systems are available on the same computer.")
     radioGroupBootloader = []
     self._radioLiLo = self._createRadioButton(radioGroupBootloader, "LiLo", state = False, on_state_change = self._onLiLoChange)
     self._radioGrub2 = self._createRadioButton(radioGroupBootloader, "Grub2", state = False, on_state_change = self._onGrub2Change)
-    bootloaderTypeSection = urwid.Columns([lblBootloader, self._radioLiLo, self._radioGrub2], focus_column = 1)
+    bootloaderTypeSection = urwidm.ColumnsMore([lblBootloader, self._radioLiLo, self._radioGrub2], focus_column = 1)
     # mbr device section
     mbrDeviceSection = self._createMbrDeviceSectionView()
     # bootloader section
-    self._bootloaderSection = urwid.WidgetPlaceholder(urwid.Text(""))
+    self._bootloaderSection = urwidm.WidgetPlaceholderMore(urwid.Text(""))
     # install section
     btnInstall = self._createButton(_("_Install bootloader").replace("_", ""), on_press = self._onInstall)
     installSection = self._createCenterButtonsWidget([btnInstall])
     # body
     bodyList = [urwid.Divider(), txtIntro, urwid.Divider('─', bottom = 1), bootloaderTypeSection, mbrDeviceSection, urwid.Divider(), self._bootloaderSection, urwid.Divider('─', top = 1, bottom = 1), installSection]
-    body = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(bodyList)), 'body')
-    frame = urwid.Frame(body, header, footer, focus_part = 'body')
+    body = urwidm.AttrWrapMore(urwidm.ListBoxMore(urwidm.FocusListWalker(bodyList)), 'body')
+    frame = urwidm.FrameMore(body, header, footer, focus_part = 'body')
+    frame.gain_focus()
     self._view = frame
 
   def _createMbrDeviceSectionView(self):
     comboList = []
     for d in self.cfg.disks:
       comboList.append(" - ".join(d))
-    comboBox = self._hackComboBox(urwid_more.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
+    comboBox = self._hackComboBox(urwidm.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -206,23 +207,23 @@ a boot menu if several operating systems are available on the same computer.")
         urwid.connect_signal(editLabel, 'focusgain', self._onLabelFocusGain, dev)
         urwid.connect_signal(editLabel, 'focuslost', self._onLabelFocusLost, dev)
         listLabel.append(editLabel)
-        listAction.append(urwid.GridFlow([self._createButton("↑", on_press = self._moveLineUp, user_data = p[0]), self._createButton("↓", on_press = self._moveLineDown, user_data = p[0])], cell_width = 5, h_sep = 1, v_sep = 1, align = "center"))
-      colDev = urwid.Pile(listDev)
-      colFS = urwid.Pile(listFS)
-      colType = urwid.Pile(listType)
-      colLabel = urwid_more.PileMore(listLabel)
-      colAction = urwid.Pile(listAction)
-      self._liloTable = urwid.Columns([('fixed', max(6, len(listDevTitle)), colDev), ('fixed', max(6, len(listFSTitle)), colFS), colType, ('fixed', max(self._liloMaxChars + 1, len(listLabelTitle)), colLabel), ('fixed', 11, colAction)], dividechars = 1)
+        listAction.append(urwidm.GridFlowMore([self._createButton("↑", on_press = self._moveLineUp, user_data = p[0]), self._createButton("↓", on_press = self._moveLineDown, user_data = p[0])], cell_width = 5, h_sep = 1, v_sep = 1, align = "center"))
+      colDev = urwidm.PileMore(listDev)
+      colFS = urwidm.PileMore(listFS)
+      colType = urwidm.PileMore(listType)
+      colLabel = urwidm.PileMore(listLabel)
+      colAction = urwidm.PileMore(listAction)
+      self._liloTable = urwidm.ColumnsMore([('fixed', max(6, len(listDevTitle)), colDev), ('fixed', max(6, len(listFSTitle)), colFS), colType, ('fixed', max(self._liloMaxChars + 1, len(listLabelTitle)), colLabel), ('fixed', 11, colAction)], dividechars = 1)
       table = urwid.LineBox(self._liloTable)
       btnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editLiLoConf)
       btnCancel = self._createButton(_("_Undo configuration").replace("_", ""), on_press = self._cancelLiLoConf)
-      pile = urwid.Pile([table, self._createCenterButtonsWidget([btnEdit, btnCancel])])
+      pile = urwidm.PileMore([table, self._createCenterButtonsWidget([btnEdit, btnCancel])])
       return pile
     elif self.cfg.cur_bootloader == 'grub2':
       comboList = []
       for p in self.cfg.partitions:
         comboList.append(" - ".join(p))
-      comboBox = self._hackComboBox(urwid_more.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
+      comboBox = self._hackComboBox(urwidm.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
       return comboBox
     else:
       return urwid.Text("")
