@@ -214,7 +214,7 @@ a boot menu if several operating systems are available on the same computer.")
       colLabel = urwidm.PileMore(listLabel)
       colAction = urwidm.PileMore(listAction)
       self._liloTable = urwidm.ColumnsMore([('fixed', max(6, len(listDevTitle)), colDev), ('fixed', max(6, len(listFSTitle)), colFS), colType, ('fixed', max(self._liloMaxChars + 1, len(listLabelTitle)), colLabel), ('fixed', 11, colAction)], dividechars = 1)
-      table = urwid.LineBox(self._liloTable)
+      table = urwidm.LineBoxMore(self._liloTable)
       btnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editLiLoConf)
       btnCancel = self._createButton(_("_Undo configuration").replace("_", ""), on_press = self._cancelLiLoConf)
       pile = urwidm.PileMore([table, self._createCenterButtonsWidget([btnEdit, btnCancel])])
@@ -273,10 +273,12 @@ a boot menu if several operating systems are available on the same computer.")
       self._labelPerDevice[device] = newText
   
   def _onLabelFocusGain(self, editLabel, device):
-    self._bootsetup.info_dialog("Focus Gain on " + device)
+    #self._bootsetup.info_dialog("Focus Gain on " + device)
+    print "Focus Gain on ", device
   
   def _onLabelFocusLost(self, editLabel, device):
-    self._bootsetup.info_dialog("Focus Lost on " + device)
+    #self._bootsetup.info_dialog("Focus Lost on " + device)
+    print "Focus Lost on ", device
 
   def _findDevPosition(self, device):
     colDevice = self._liloTable.widget_list[0]
