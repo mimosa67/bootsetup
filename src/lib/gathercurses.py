@@ -138,7 +138,8 @@ boot partitions:{boot_partitions}
     """
     # header
     txtTitle = urwid.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
-    header = urwidm.AttrMapMore(urwidm.PileMore([txtTitle, urwid.Divider()]), 'header')
+    header = urwidm.PileMore([txtTitle, urwid.Divider()])
+    header.attr = 'header'
     # footer
     keys = [
         ('H', " " + _("Help")),
@@ -275,10 +276,12 @@ a boot menu if several operating systems are available on the same computer.")
   def _onLabelFocusGain(self, editLabel, device):
     #self._bootsetup.info_dialog("Focus Gain on " + device)
     print "Focus Gain on ", device
+    return True
   
   def _onLabelFocusLost(self, editLabel, device):
     #self._bootsetup.info_dialog("Focus Lost on " + device)
     print "Focus Lost on ", device
+    return False
 
   def _findDevPosition(self, device):
     colDevice = self._liloTable.widget_list[0]

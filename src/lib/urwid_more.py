@@ -23,32 +23,51 @@ class FocusEventWidget(urwid.Widget):
   def _can_loose_focus(self):
     return True
   def _gain_focus(self):
-    print "gain focus", self
-    time.sleep(1)
+    #print "gain focus", self
+    #time.sleep(1)
     ret = self._can_gain_focus()
     if ret:
       self._has_focus = True
     return ret
   def _loose_focus(self):
-    print "loose focus", self
-    time.sleep(1)
+    #print "loose focus", self
+    #time.sleep(1)
     ret = self._can_loose_focus()
     if ret:
       self._has_focus = False
     return ret
+  def _emit_focus_event(self, name, *args):
+    """
+    Return True if there is no callback, or if all callback answer True
+    """
+    result = True
+    signal_obj = urwid.signals._signals
+    d = getattr(self, signal_obj._signal_attr, {})
+    for callback, user_arg in d.get(name, []):
+      args_copy = (self,) + args
+      if user_arg is not None:
+        args_copy = args_copy + (user_arg,)
+      result &= bool(callback(*args_copy))
+    return result
   def emit_focusgain(self):
-    self._emit('focusgain')
+    """
+    Return True if there is no callback, or if all callback answer True
+    """
+    return self._emit_focus_event('focusgain')
   def emit_focuslost(self):
-    self._emit('focuslost')
+    """
+    Return True if there is no callback, or if all callback answer True
+    """
+    return self._emit_focus_event('focuslost')
   def gain_focus(self):
     ret = self._gain_focus()
     if ret:
-      self.emit_focusgain()
+      ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
     if ret:
-      self.emit_focuslost()
+      ret = self.emit_focuslost()
     return ret
 
 class SensitiveWidgetBehavior(object):
@@ -82,6 +101,14 @@ class SensitiveWidgetBehavior(object):
   def set_unsensitive_attr(self, unsensitive_attr):
     self._unsensitive_attr = unsensitive_attr
   unsensitive_attr = property(get_unsensitive_attr, set_unsensitive_attr)
+  def get_attr(self):
+    return (self.sensitive_attr, self.unsensitive_attr)
+  def set_attr(self, attr):
+    if type(attr) != tuple:
+      attr = (attr, attr)
+    self.set_sensitive_attr(attr)
+    self.set_unsensitive_attr(attr)
+  attr = property(get_attr, set_attr)
   def get_sensitive(self):
     return self._selectable
   def set_sensitive(self, state):
@@ -111,7 +138,6 @@ class More(FocusEventWidget, SensitiveWidgetBehavior):
   def render(self, size, focus = False):
     for cls in self.__class__.__bases__:
       if cls != More and hasattr(cls, 'render') and callable(cls.render) and cls.render != More.render: # skip me
-        print cls
         return self.render_with_attr(cls.render(self, size, focus), focus)
 
 class EditMore(More, urwid.Edit):
@@ -144,7 +170,7 @@ class WidgetWrapMore(More, urwid.WidgetWrap):
       if isinstance(self._w, FocusEventWidget):
         ret = self._w.gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -152,7 +178,7 @@ class WidgetWrapMore(More, urwid.WidgetWrap):
       if isinstance(self._w, FocusEventWidget):
         ret = self._w.loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class WidgetDecorationMore(More, urwid.WidgetDecoration):
@@ -175,8 +201,7 @@ class WidgetDecorationMore(More, urwid.WidgetDecoration):
       if isinstance(self._original_widget, FocusEventWidget):
         ret = self._original_widget.gain_focus()
       else:
-        print "* no delegation, emit focus gain"
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -184,8 +209,7 @@ class WidgetDecorationMore(More, urwid.WidgetDecoration):
       if isinstance(self.original_widget, FocusEventWidget):
         ret = self.original_widget.loose_focus()
       else:
-        print "* no delegation, emit focus lost"
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class WidgetPlaceholderMore(WidgetDecorationMore, urwid.WidgetPlaceholder):
@@ -290,7 +314,7 @@ class FrameMore(More, urwid.Frame):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -299,7 +323,7 @@ class FrameMore(More, urwid.Frame):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class PileMore(More, urwid.Pile):
@@ -379,7 +403,7 @@ class PileMore(More, urwid.Pile):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -388,7 +412,7 @@ class PileMore(More, urwid.Pile):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class ColumnsMore(More, urwid.Columns):
@@ -416,7 +440,7 @@ class ColumnsMore(More, urwid.Columns):
       if col and isinstance(self.get_focus(), FocusEventWidget):
         ret = self.get_focus().gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -425,7 +449,7 @@ class ColumnsMore(More, urwid.Columns):
       if col and isinstance(self.get_focus(), FocusEventWidget):
         ret = self.get_focus().loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class GridFlowMore(More, urwid.GridFlow):
@@ -511,7 +535,7 @@ class GridFlowMore(More, urwid.GridFlow):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -520,7 +544,7 @@ class GridFlowMore(More, urwid.GridFlow):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class OverlayMore(More, urwid.Overlay):
@@ -534,7 +558,7 @@ class OverlayMore(More, urwid.Overlay):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -543,7 +567,7 @@ class OverlayMore(More, urwid.Overlay):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class ListBoxMore(More, urwid.ListBox):
@@ -559,7 +583,7 @@ class ListBoxMore(More, urwid.ListBox):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.gain_focus()
       else:
-        self.emit_focusgain()
+        ret = self.emit_focusgain()
     return ret
   def loose_focus(self):
     ret = self._loose_focus()
@@ -568,20 +592,20 @@ class ListBoxMore(More, urwid.ListBox):
       if focus_w and isinstance(focus_w, FocusEventWidget):
         ret = focus_w.loose_focus()
       else:
-        self.emit_focuslost()
+        ret = self.emit_focuslost()
     return ret
 
 class FocusListWalker(urwid.SimpleListWalker):
   def set_focus(self, position):
     """Set focus position."""
     assert type(position) == int
-    print "focus list walker set focus focus={0}, position={1}".format(self.focus, position)
+    #print "focus list walker set focus focus={0}, position={1}".format(self.focus, position)
     ok = True
     if self.focus != position and len(self) > 1:
       oldw = self[self.focus]
-      print "oldw", oldw
+      #print "oldw", oldw
       neww = self[position]
-      print "neww", neww
+      #print "neww", neww
       if isinstance(oldw, FocusEventWidget):
         print "verify and try to perform a loose focus on oldw"
         ok = oldw.loose_focus()
@@ -594,7 +618,7 @@ class FocusListWalker(urwid.SimpleListWalker):
       print "ok, so will move focus to position", position
       urwid.SimpleListWalker.set_focus(self, position)
       print "focus = ${f}, position = ${p}, len = ${l}".format(f = self.focus, p = position, l = len(self))
-      if self.focus == position:
+      if self.focus != position and len(self) > 1:
         neww = self[position]
         print "neww", neww
         if isinstance(neww, FocusEventWidget):
