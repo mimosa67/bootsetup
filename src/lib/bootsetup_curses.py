@@ -14,7 +14,7 @@ import re
 from gathercurses import *
 from bootsetup import *
 import urwid
-import urwid_more
+import urwid_more as urwidm
 
 class BootSetupCurses(BootSetup):
   
@@ -52,11 +52,11 @@ class BootSetupCurses(BootSetup):
   def info_dialog(self, message, title = None, parent = None):
     if not title:
       title = _("INFO")
-    dialog = urwid_more.TextDialog(('info', unicode(message)), 10, 60, ('important', unicode(title)))
+    dialog = urwidm.TextDialog(('info', unicode(message)), 10, 60, ('important', unicode(title)))
     self._show_ui_dialog(dialog, parent)
 
   def error_dialog(self, message, title = None, parent = None):
     if not title:
       title = _("/!\ ERROR")
-    dialog = urwid_more.TextDialog(('error', unicode(message)), 10, 60, ('important', unicode(title)))
+    dialog = urwidm.TextDialog(('error', unicode(message)), 10, 60, ('important', unicode(title)))
     self._show_ui_dialog(dialog, parent)

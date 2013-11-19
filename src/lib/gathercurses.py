@@ -28,7 +28,7 @@ class GatherCurses:
   # http://excess.org/urwid/wiki/RecommendedPalette
   _palette = [
       ('body', 'light gray', 'black'),
-      ('header', 'dark red', 'light gray', 'bold'),
+      ('header', 'dark blue', 'light gray'),
       ('footer', 'light green', 'black', 'bold'),
       ('footer_key', 'yellow', 'black', 'bold'),
       ('strong', 'white', 'black', 'bold'),
@@ -36,6 +36,7 @@ class GatherCurses:
       ('unfocusable', 'brown', 'black'),
       ('focus', 'black', 'light green'),
       ('focus_edit', 'yellow', 'black'),
+      ('focus_icon', 'yellow', 'black'),
       ('focus_radio', 'yellow', 'black'),
       ('combobody', 'black', 'light gray'),
       ('combofocus', 'black', 'light green'),
@@ -45,7 +46,6 @@ class GatherCurses:
   _view = None
   _loop = None
   _comboBoxes = [] # hack for ComboBox
-  _comboBoxArrow = "   ↓"
   _labelPerDevice = {}
   _lilo = None
   _grub2 = None
@@ -76,10 +76,11 @@ boot partitions:{boot_partitions}
     # hack for ComboBox
     for c in self._comboBoxes:
       c.build_combobox(self._view, self._loop.screen, c.displayRows)
+      c.set_combo_attrs('combobody', 'combofocus')
     if self.cfg.cur_bootloader == 'lilo':
-      self._radioLiLo.original_widget.set_state(True)
+      self._radioLiLo.set_state(True)
     elif self.cfg.cur_bootloader == 'grub2':
-      self._radioGrub2.original_widget.set_state(True)
+      self._radioGrub2.set_state(True)
     self._loop.run()
   
   def _infoDialog(self, message):
@@ -88,11 +89,11 @@ boot partitions:{boot_partitions}
   def _errorDialog(self, message):
     self._bootsetup.error_dialog(message, parent = self._view)
 
-  def _hackComboBox(self, comboBox):
-    comboBox.DOWN_ARROW = self._comboBoxArrow
-    comboBox.displayRows = 9
+  def _hackComboBox(self, comboBox, position = 10):
+    comboBox.displayRows = position
     if self._loop and self._loop.screen.started:
       comboBox.build_combobox(self._view, self._loop.screen, comboBox.displayRows)
+      comboBox.set_combo_attrs('combobody', 'combofocus')
     else:
       self._comboBoxes.append(comboBox)
     return comboBox
@@ -102,11 +103,11 @@ boot partitions:{boot_partitions}
     return edit
 
   def _createButton(self, label, on_press = None, user_data = None):
-    btn = urwidm.DynButton(label, on_press, user_data, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus')
+    btn = urwidm.ButtonMore(label, on_press, user_data)
     return btn
 
   def _createRadioButton(self, group, label, state = "first True", on_state_change = None, user_data = None):
-    radio = urwidm.DynRadioButton(group, label, state, on_state_change, user_data, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus_radio')
+    radio = urwidm.RadioButtonMore(group, label, state, on_state_change, user_data)
     return radio
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 2, v_sep = 0):
@@ -140,15 +141,16 @@ boot partitions:{boot_partitions}
     """
     # header
     txtTitle = urwid.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
-    header = urwidm.PileMore([txtTitle, urwid.Divider()])
+    header = urwidm.PileMore([urwid.Divider(), txtTitle, urwid.Text('─' * (len(txtTitle.text) + 2), align = "center")])
     header.attr = 'header'
     # footer
     keys = [
-        ('H', " " + _("Help")),
-        ('A', " " + _("About")),
-        ('Q / F10', " " + _("Quit")),
+        ('h', _("Help")),
+        ('a', _("About")),
+        (('q', 'f10'), _("Quit")),
       ]
     keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
+    #keysColumns = urwid.Text("footer")
     footer = urwidm.AttrMapMore(keysColumns, 'footer')
     # intro
     introHtml = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
@@ -183,7 +185,7 @@ a boot menu if several operating systems are available on the same computer.")
     comboList = []
     for d in self.cfg.disks:
       comboList.append(" - ".join(d))
-    comboBox = self._hackComboBox(urwidm.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus'))
+    comboBox = self._hackComboBox(urwidm.ComboBox(_("Install bootloader on:"), comboList))
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -226,7 +228,7 @@ a boot menu if several operating systems are available on the same computer.")
       comboList = []
       for p in self.cfg.partitions:
         comboList.append(" - ".join(p))
-      comboBox = self._hackComboBox(urwidm.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus'))
+      comboBox = self._hackComboBox(urwidm.ComboBox(_("Install Grub2 files on:"), comboList), 12)
       return comboBox
     else:
       return urwid.Text("")
@@ -234,9 +236,12 @@ a boot menu if several operating systems are available on the same computer.")
   def _changeBootloaderSection(self):
     self._bootloaderSection.original_widget = self._createBootloaderSectionView()
 
-  def _handleKeys(self, key):
-    if key in ('q', 'Q', 'f10'):
-      self.main_quit()
+  def _handleKeys(self, keys):
+    for key in keys:
+      key = key.lower()
+      if key in ('q', 'f10'):
+        self.main_quit()
+        break
 
   def _onLiLoChange(self, radioLiLo, newState):
     if newState:
