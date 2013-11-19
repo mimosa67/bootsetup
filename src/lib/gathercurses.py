@@ -269,7 +269,7 @@ a boot menu if several operating systems are available on the same computer.")
   def _showLabelError(self, errorType, editLabel):
     """Show a label error if the errorType is 'space' or 'max' and return True, else return False."""
     if errorType == 'space':
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain spaces.\n\nPlease verify and correct.\n"))
       editLabel.sensitive_attr = ('error', 'focus_error')
       return True
     elif errorType == 'max':
@@ -367,7 +367,7 @@ a boot menu if several operating systems are available on the same computer.")
 
   def installation_done(self):
     print "Bootloader Installation Done."
-    msg = _("Bootloader installation process completed...")
+    msg = _("Bootloader installation process completed.")
     self._bootsetup.info_dialog(msg)
     self.main_quit()
 

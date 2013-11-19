@@ -113,10 +113,10 @@ a boot menu if several operating systems are available on the same computer.")
 
   def on_boot_partition_treeview_enter_notify_event(self, widget, data=None):
     self.LabelContextHelp.set_markup(_("Here you must define a boot menu label for each \
-of the operating system that will be displayed on your bootloader menu.\n\
+of the operating systems that will be displayed in your bootloader menu.\n\
 Any partition for which you do not set a boot menu label will not be configured and will \
-not be displayed on the bootloader menu.\n\
-If a few kernels are available within one partition, the label you have chosen for that \
+not be displayed in the bootloader menu.\n\
+If several kernels are available within one partition, the label you have chosen for that \
 partition will be appended numerically to create multiple menu entries for each of these kernels.\n\
 Any of these settings can be edited manually in the configuration file."))
   
@@ -136,9 +136,9 @@ Any of these settings can be edited manually in the configuration file."))
     self.LabelContextHelp.set_markup(_("This will undo all settings (even manual modifications)."))
 
   def on_edit_eventbox_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("Experienced users have the possibility to \
+    self.LabelContextHelp.set_markup(_("Experienced users can \
 manually edit the LiLo configuration file.\n\
-Please do not temper with this file unless you know what you are doing and you have \
+Please do not tamper with this file unless you know what you are doing and you have \
 read its commented instructions regarding chrooted paths."))
 
   def on_button_quit_enter_notify_event(self, widget, data=None):
@@ -245,7 +245,7 @@ click on this button to install your bootloader."))
     row_number = int(row_number)
     max_chars = 15
     if ' ' in new_text:
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain spaces.\n\nPlease verify and correct.\n"))
     elif len(new_text) > max_chars:
       self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
     else:
@@ -396,6 +396,6 @@ click on this button to install your bootloader."))
 
   def installation_done(self):
     print "Bootloader Installation Done."
-    msg = "<b>{0}</b>".format(_("Bootloader installation process completed..."))
+    msg = "<b>{0}</b>".format(_("Bootloader installation process completed."))
     self._bootsetup.info_dialog(msg)
     self.gtk_main_quit(self.Window)
