@@ -15,6 +15,16 @@ class Config:
   """
   Configuration for BootSetup
   """
+  disks = []
+  partitions = []
+  boot_partitions = []
+  cur_bootloader = None
+  cur_boot_partition = None
+  cur_mbr_device = None
+  is_test = False
+  use_test_data = False
+  is_live = False
+  
   def __init__(self, bootloader, target_partition, is_test, use_test_data):
     self.cur_bootloader = bootloader
     self.cur_boot_partition = target_partition and re.sub(r'/dev/', '', target_partition) or ''
@@ -42,15 +52,15 @@ class Config:
             ['sdb', 'SGT350 (350GB)']
           ]
       self.partitions = [
-            ['sda1', 'ntfs', 'WinVista (20GB)'],
-            ['sda5', 'ext2', 'Salix (80GB)'],
-            ['sdb1', 'fat32', 'Data (300GB)'],
-            ['sdb2', 'ext4', 'Debian (50GB)']
+            ['sda1', 'ntfs', u'WinVista (20GB)'],
+            ['sda5', 'ext2', u'Salix (80GB)'],
+            ['sdb1', 'fat32', u'Data (300GB)'],
+            ['sdb2', 'ext4', u'Debian (50GB)']
           ]
       self.boot_partitions = [
-            ['sda5', 'ext2', 'linux', 'Salix', 'Salix 14.0'],
-            ['sda1', 'ntfs', 'chain', 'Windows', 'Vista'],
-            ['sdb2', 'ext4', 'linux', 'Debian', 'Debian 7']
+            ['sda5', 'ext2', 'linux', u'Salix', u'Salix 14.0'],
+            ['sda1', 'ntfs', 'chain', u'Windows', u'Vista'],
+            ['sdb2', 'ext4', 'linux', u'Debian', u'Debian 7']
           ]
       if not self.cur_boot_partition:
         self.cut_boot_partition = 'sda5'
@@ -74,17 +84,17 @@ class Config:
         slashDistro = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
         if slashDistro:
           probes = slashDistro
-      self.__debug("Probes: " + str(probes))
+      self.__debug("Probes: " + unicode(probes))
       probes.extend(sltl.execGetOutput('/usr/sbin/os-prober', shell = False))
-      self.__debug("Probes: " + str(probes))
+      self.__debug("Probes: " + unicode(probes))
       for probe in probes:
-        probe = probe.strip() # ensure clean line
+        probe = unicode(probe).strip() # ensure clean line
         if probe[0] != '/':
           continue
         probe_info = probe.split(':')
         probe_dev = re.sub(r'/dev/', '', probe_info[0])
-        probe_label = probe_info[1]
-        probe_os = probe_info[2]
+        probe_os = probe_info[1]
+        probe_label = probe_info[2]
         probe_boottype = probe_info[3]
         try:
           probe_fstype = [p[1] for p in self.partitions if p[0] == probe_dev][0]

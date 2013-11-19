@@ -14,7 +14,6 @@ import gtk.glade
 import re
 import math
 import subprocess
-from common import *
 from config import *
 import salix_livetools_library as sltl
 from lilo import *
@@ -24,7 +23,14 @@ class GatherGui:
   """
   GUI to gather information about the configuration to setup.
   """
-  def __init__(self, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
+  
+  _lilo = None
+  _grub2 = None
+  _editing = False
+  _custom_lilo = False
+
+  def __init__(self, bootsetup, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
+    self._bootsetup = bootsetup
     self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
     print """
 bootloader         = {bootloader}
@@ -77,13 +83,16 @@ boot partitions:{boot_partitions}
 A bootloader is required to load the main operating system of a computer and will initially display \
 a boot menu if several operating systems are available on the same computer.")
     self.on_leave_notify_event(None)
-    self.editing = False
-    self.custom_lilo = False
-    self.lilo = self.grub2 = None
     self.build_data_stores()
     self.update_buttons()
     # Connect signals
     builder.connect_signals(self)
+
+  def run(self):
+    # indicates to gtk (and gdk) that we will use threads
+    gtk.gdk.threads_init()
+    # start the main gtk loop
+    gtk.main()
 
   def _add_combobox_cell_renderer(self, comboBox, modelPosition, start=False, expand=False, padding=0):
     cell = gtk.CellRendererText()
@@ -183,10 +192,10 @@ click on this button to install your bootloader."))
 
   # What to do when the exit X on the main window upper right is clicked
   def gtk_main_quit(self, widget, data=None):
-    if self.lilo:
-      del self.lilo
-    if self.grub2:
-      del self.grub2
+    if self._lilo:
+      del self._lilo
+    if self._grub2:
+      del self._grub2
     print "Bye _o/"
     gtk.main_quit()
 
@@ -204,16 +213,16 @@ click on this button to install your bootloader."))
     if widget.get_active():
       if widget == self.RadioLilo:
         self.cfg.cur_bootloader = 'lilo'
-        if self.grub2:
-          self.grub2 = None
-        self.lilo = Lilo(self.cfg.is_test)
+        if self._grub2:
+          self._grub2 = None
+        self._lilo = Lilo(self.cfg.is_test)
         self.LiloPart.show()
         self.Grub2Part.hide()
       else:
         self.cfg.cur_bootloader = 'grub2'
-        if self.lilo:
-          self.lilo = None
-        self.grub2 = Grub2(self.cfg.is_test)
+        if self._lilo:
+          self._lilo = None
+        self._grub2 = Grub2(self.cfg.is_test)
         self.LiloPart.hide()
         self.Grub2Part.show()
       self.update_buttons()
@@ -223,7 +232,7 @@ click on this button to install your bootloader."))
     self.update_buttons()
 
   def set_editing_mode(self, is_edit):
-    self.editing = is_edit
+    self._editing = is_edit
     self.update_buttons()
 
   def on_label_cellrenderercombo_editing_started(self, widget, path, data):
@@ -236,9 +245,9 @@ click on this button to install your bootloader."))
     row_number = int(row_number)
     max_chars = 15
     if ' ' in new_text:
-      error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
     elif len(new_text) > max_chars:
-      error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
     else:
       model, it = self.BootPartitionTreeview.get_selection().get_selected()
       found = False
@@ -249,7 +258,7 @@ click on this button to install your bootloader."))
           found = True
           break
       if found:
-        error_dialog(_("You have used the same label for different Operating Systems. Please verify and correct.\n"))
+        self._bootsetup.error_dialog(_("You have used the same label for different Operating Systems. Please verify and correct.\n"))
       else:
         model.set_value(it, 3, new_text)
         if new_text == _("Set..."):
@@ -326,27 +335,27 @@ click on this button to install your bootloader."))
           self.cfg.cur_boot_partition = dev
         partitions.append([dev, fs, t, label])
     if self.cfg.cur_boot_partition:
-      self.lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
+      self._lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
     else:
-      error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
+      self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
 
   def on_edit_button_clicked(self, widget, data=None):
-    lilocfg = self.lilo.getConfigurationPath()
+    lilocfg = self._lilo.getConfigurationPath()
     if not os.path.exists(lilocfg):
-      self.custom_lilo = True
+      self._custom_lilo = True
       self.update_buttons()
       self._create_lilo_config()
     if os.path.exists(lilocfg):
       try:
         sltl.execCall(['xdg-open', lilocfg], shell=False, env=None)
       except:
-        error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
+        self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
 
   def on_undo_button_clicked(self, widget, data=None):
-    lilocfg = self.lilo.getConfigurationPath()
+    lilocfg = self._lilo.getConfigurationPath()
     if os.path.exists(lilocfg):
       os.remove(lilocfg)
-    self.custom_lilo = False
+    self._custom_lilo = False
     self.update_buttons()
 
   def on_combobox_partition_changed(self, widget, data=None):
@@ -357,7 +366,7 @@ click on this button to install your bootloader."))
     install_ok = False
     multiple = False
     if self.cfg.cur_mbr_device and os.path.exists("/dev/{0}".format(self.cfg.cur_mbr_device)) and sltl.getDiskInfo(self.cfg.cur_mbr_device):
-      if self.cfg.cur_bootloader == 'lilo' and not self.editing:
+      if self.cfg.cur_bootloader == 'lilo' and not self._editing:
         if len(self.BootPartitionListStore) > 1:
           multiple = True
         for bp in self.BootPartitionListStore:
@@ -366,27 +375,27 @@ click on this button to install your bootloader."))
       elif self.cfg.cur_bootloader == 'grub2':
         if self.cfg.cur_boot_partition and os.path.exists("/dev/{0}".format(self.cfg.cur_boot_partition)) and sltl.getPartitionInfo(self.cfg.cur_boot_partition):
           install_ok = True
-    self.RadioLilo.set_sensitive(not self.editing)
-    self.RadioGrub2.set_sensitive(not self.editing)
-    self.ComboBoxMbr.set_sensitive(not self.editing)
-    self.BootPartitionTreeview.set_sensitive(not self.custom_lilo)
-    self.UpButton.set_sensitive(not self.editing and multiple)
-    self.DownButton.set_sensitive(not self.editing and multiple)
-    self.UndoButton.set_sensitive(not self.editing and self.custom_lilo)
-    self.EditButton.set_sensitive(not self.editing and install_ok)
-    self.ExecuteButton.set_sensitive(not self.editing and install_ok)
+    self.RadioLilo.set_sensitive(not self._editing)
+    self.RadioGrub2.set_sensitive(not self._editing)
+    self.ComboBoxMbr.set_sensitive(not self._editing)
+    self.BootPartitionTreeview.set_sensitive(not self._custom_lilo)
+    self.UpButton.set_sensitive(not self._editing and multiple)
+    self.DownButton.set_sensitive(not self._editing and multiple)
+    self.UndoButton.set_sensitive(not self._editing and self._custom_lilo)
+    self.EditButton.set_sensitive(not self._editing and install_ok)
+    self.ExecuteButton.set_sensitive(not self._editing and install_ok)
 
   def on_execute_button_clicked(self, widget, data=None):
     if self.cfg.cur_bootloader == 'lilo':
-      if not os.path.exists(self.lilo.getConfigurationPath()):
+      if not os.path.exists(self._lilo.getConfigurationPath()):
         self._create_lilo_config()
-      self.lilo.install()
+      self._lilo.install()
     elif self.cfg.cur_bootloader == 'grub2':
-      self.grub2.install(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition)
+      self._grub2.install(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition)
     self.installation_done()
 
   def installation_done(self):
     print "Bootloader Installation Done."
     msg = "<b>{0}</b>".format(_("Bootloader installation process completed..."))
-    info_dialog(msg)
+    self._bootsetup.info_dialog(msg)
     self.gtk_main_quit(self.Window)
