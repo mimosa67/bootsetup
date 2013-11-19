@@ -33,12 +33,14 @@ class GatherCurses:
       ('footer_key', 'yellow', 'black', 'bold'),
       ('strong', 'white', 'black', 'bold'),
       ('focusable', 'light green', 'black'),
-      ('non_focusable', 'brown', 'black'),
+      ('unfocusable', 'brown', 'black'),
       ('focus', 'black', 'light green'),
       ('focus_edit', 'yellow', 'black'),
       ('focus_radio', 'yellow', 'black'),
       ('combobody', 'black', 'light gray'),
       ('combofocus', 'black', 'light green'),
+      ('error', 'white', 'light red'),
+      ('focus_error', 'light red', 'black'),
     ]
   _view = None
   _loop = None
@@ -88,7 +90,7 @@ boot partitions:{boot_partitions}
 
   def _hackComboBox(self, comboBox):
     comboBox.DOWN_ARROW = self._comboBoxArrow
-    comboBox.displayRows = 5
+    comboBox.displayRows = 9
     if self._loop and self._loop.screen.started:
       comboBox.build_combobox(self._view, self._loop.screen, comboBox.displayRows)
     else:
@@ -100,11 +102,11 @@ boot partitions:{boot_partitions}
     return edit
 
   def _createButton(self, label, on_press = None, user_data = None):
-    btn = urwidm.DynButton(label, on_press, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus')
+    btn = urwidm.DynButton(label, on_press, user_data, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus')
     return btn
 
   def _createRadioButton(self, group, label, state = "first True", on_state_change = None, user_data = None):
-    radio = urwidm.DynRadioButton(group, label, state, on_state_change, user_data, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus_radio')
+    radio = urwidm.DynRadioButton(group, label, state, on_state_change, user_data, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus_radio')
     return radio
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 2, v_sep = 0):
@@ -171,16 +173,17 @@ a boot menu if several operating systems are available on the same computer.")
     installSection = self._createCenterButtonsWidget([btnInstall])
     # body
     bodyList = [urwid.Divider(), txtIntro, urwid.Divider('─', bottom = 1), bootloaderTypeSection, mbrDeviceSection, urwid.Divider(), self._bootloaderSection, urwid.Divider('─', top = 1, bottom = 1), installSection]
-    body = urwidm.AttrWrapMore(urwidm.ListBoxMore(urwidm.FocusListWalker(bodyList)), 'body')
+    body = urwidm.ListBoxMore(urwid.SimpleListWalker(bodyList))
+    body.attr = 'body'
     frame = urwidm.FrameMore(body, header, footer, focus_part = 'body')
-    frame.gain_focus()
+    frame.attr = 'body'
     self._view = frame
 
   def _createMbrDeviceSectionView(self):
     comboList = []
     for d in self.cfg.disks:
       comboList.append(" - ".join(d))
-    comboBox = self._hackComboBox(urwidm.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
+    comboBox = self._hackComboBox(urwidm.ComboBox(_("Install bootloader on:"), comboList, focus = 0, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus'))
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -205,7 +208,6 @@ a boot menu if several operating systems are available on the same computer.")
         self._labelPerDevice[dev] = label
         editLabel = self._createEdit(edit_text = label, wrap = 'clip')
         urwid.connect_signal(editLabel, 'change', self._onLabelChange, dev)
-        urwid.connect_signal(editLabel, 'focusgain', self._onLabelFocusGain, dev)
         urwid.connect_signal(editLabel, 'focuslost', self._onLabelFocusLost, dev)
         listLabel.append(editLabel)
         listAction.append(urwidm.GridFlowMore([self._createButton("↑", on_press = self._moveLineUp, user_data = p[0]), self._createButton("↓", on_press = self._moveLineDown, user_data = p[0])], cell_width = 5, h_sep = 1, v_sep = 1, align = "center"))
@@ -224,7 +226,7 @@ a boot menu if several operating systems are available on the same computer.")
       comboList = []
       for p in self.cfg.partitions:
         comboList.append(" - ".join(p))
-      comboBox = self._hackComboBox(urwidm.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'non-focusable'), focus_attr = 'focus'))
+      comboBox = self._hackComboBox(urwidm.ComboBox(_("Install Grub2 files on:"), comboList, focus = 0, attrs = ('focusable', 'unfocusable'), focus_attr = 'focus'))
       return comboBox
     else:
       return urwid.Text("")
@@ -259,29 +261,31 @@ a boot menu if several operating systems are available on the same computer.")
       return 'max'
     else:
       return 'ok'
-
+  def _showLabelError(self, errorType, editLabel):
+    """Show a label error if the errorType is 'space' or 'max' and return True, else return False."""
+    if errorType == 'space':
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
+      editLabel.sensitive_attr = ('error', 'focus_error')
+      return True
+    elif errorType == 'max':
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
+      editLabel.sensitive_attr = ('error', 'focus_error')
+      return True
+    elif errorType == 'pass':
+      return False
+    else: # == 'ok'
+      editLabel.sensitive_attr = ('focusable', 'focus_edit')
+      return False
   def _onLabelChange(self, editLabel, newText, device):
     validOld = self._isLabelValid(editLabel.edit_text)
     if validOld == 'ok':
       validNew = self._isLabelValid(newText)
     else:
       validNew = 'pass'
-    if validNew == 'space':
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain any space.\n\nPlease verify and correct.\n"))
-    elif validNew == 'max':
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
-    else:
+    if not self._showLabelError(validNew, editLabel):
       self._labelPerDevice[device] = newText
-  
-  def _onLabelFocusGain(self, editLabel, device):
-    #self._bootsetup.info_dialog("Focus Gain on " + device)
-    print "Focus Gain on ", device
-    return True
-  
   def _onLabelFocusLost(self, editLabel, device):
-    #self._bootsetup.info_dialog("Focus Lost on " + device)
-    print "Focus Lost on ", device
-    return False
+    return not self._showLabelError(self._isLabelValid(editLabel.edit_text), editLabel)
 
   def _findDevPosition(self, device):
     colDevice = self._liloTable.widget_list[0]

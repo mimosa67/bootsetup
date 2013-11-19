@@ -10,7 +10,6 @@ __license__ = 'GPL2+'
 
 import urwid
 import gettext
-import time
 
 class FocusEventWidget(urwid.Widget):
   signals = ['focusgain', 'focuslost'] # will be used by the metaclass of Widget to call register_signal
@@ -22,20 +21,6 @@ class FocusEventWidget(urwid.Widget):
     return True
   def _can_loose_focus(self):
     return True
-  def _gain_focus(self):
-    #print "gain focus", self
-    #time.sleep(1)
-    ret = self._can_gain_focus()
-    if ret:
-      self._has_focus = True
-    return ret
-  def _loose_focus(self):
-    #print "loose focus", self
-    #time.sleep(1)
-    ret = self._can_loose_focus()
-    if ret:
-      self._has_focus = False
-    return ret
   def _emit_focus_event(self, name, *args):
     """
     Return True if there is no callback, or if all callback answer True
@@ -60,14 +45,38 @@ class FocusEventWidget(urwid.Widget):
     """
     return self._emit_focus_event('focuslost')
   def gain_focus(self):
-    ret = self._gain_focus()
+    ret = self._can_gain_focus()
     if ret:
       ret = self.emit_focusgain()
+    if ret:
+      self._has_focus = True
     return ret
   def loose_focus(self):
-    ret = self._loose_focus()
+    ret = self._can_loose_focus()
     if ret:
       ret = self.emit_focuslost()
+    if ret:
+      self._has_focus = False
+    return ret
+  def _gain_focus_with_subwidget(self, subwidget):
+    ret = self._can_gain_focus()
+    if ret:
+      if subwidget and isinstance(subwidget, FocusEventWidget):
+        ret = subwidget.gain_focus()
+      else:
+        ret = self.emit_focusgain()
+    if ret:
+      self._has_focus = True
+    return ret
+  def _loose_focus_with_subwidget(self, subwidget):
+    ret = self._can_loose_focus()
+    if ret:
+      if subwidget and isinstance(subwidget, FocusEventWidget):
+        ret = subwidget.loose_focus()
+      else:
+        ret = self.emit_focuslost()
+    if ret:
+      self._has_focus = False
     return ret
 
 class SensitiveWidgetBehavior(object):
@@ -87,19 +96,25 @@ class SensitiveWidgetBehavior(object):
       focus_attr = attribute to apply when in focus, if None use attr
   """
 
-  def __init__(self):
-    unsensitive_attr = self._default_unsensitive_attr
+  def __init__(self, sensitive = True):
+    if hasattr(self, '_sensitive_attr'):
+      return # already initialized
     self.set_sensitive_attr(self._default_sensitive_attr)
     self.set_unsensitive_attr(self._default_unsensitive_attr)
+    self.set_sensitive(sensitive)
   def get_sensitive_attr(self):
     return self._sensitive_attr
-  def set_sensitive_attr(self, sensitive_attr):
-    self._sensitive_attr = sensitive_attr
+  def set_sensitive_attr(self, attr):
+    if type(attr) != tuple:
+      attr = (attr, attr)
+    self._sensitive_attr = attr
   sensitive_attr = property(get_sensitive_attr, set_sensitive_attr)
   def get_unsensitive_attr(self):
     return self._unsensitive_attr
-  def set_unsensitive_attr(self, unsensitive_attr):
-    self._unsensitive_attr = unsensitive_attr
+  def set_unsensitive_attr(self, attr):
+    if type(attr) != tuple:
+      attr = (attr, attr)
+    self._unsensitive_attr = attr
   unsensitive_attr = property(get_unsensitive_attr, set_unsensitive_attr)
   def get_attr(self):
     return (self.sensitive_attr, self.unsensitive_attr)
@@ -115,7 +130,7 @@ class SensitiveWidgetBehavior(object):
     self._selectable = state
   sensitive = property(get_sensitive, set_sensitive)
   def selectable(self):
-    return self.sensitive
+    return self.get_sensitive()
   def render_with_attr(self, canvas, focus = False):
     """ Taken from AttrMap """
     new_canvas = urwid.CompositeCanvas(canvas)
@@ -133,19 +148,25 @@ class SensitiveWidgetBehavior(object):
     return new_canvas
 
 class More(FocusEventWidget, SensitiveWidgetBehavior):
-  def __init__(self):
-    SensitiveWidgetBehavior.__init__(self)
+  """
+  Class that combine a FocusEventWidget and a SensitiveWidgetBehavior.
+  Parent of all other widgets defined here.
+  """
+  def __init__(self, sensitive = True):
+    SensitiveWidgetBehavior.__init__(self, sensitive)
   def render(self, size, focus = False):
     for cls in self.__class__.__bases__:
       if cls != More and hasattr(cls, 'render') and callable(cls.render) and cls.render != More.render: # skip me
         return self.render_with_attr(cls.render(self, size, focus), focus)
 
 class EditMore(More, urwid.Edit):
+  _default_sensitive_attr = ('focusable', 'focus_edit')
   def __init__(self, caption = u"", edit_text = u"", multiline = False, align = urwid.LEFT, wrap = urwid.SPACE, allow_tab = False, edit_pos = None, layout = None, mask = None):
     More.__init__(self)
     urwid.Edit.__init__(self, caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
 
 class IntEditMore(More, urwid.IntEdit):
+  _default_sensitive_attr = ('focusable', 'focus_edit')
   def __init__(self, caption = "", default = None):
     More.__init__(self)
     urwid.IntEdit.__init__(self, caption, default)
@@ -165,21 +186,9 @@ class WidgetWrapMore(More, urwid.WidgetWrap):
     else:
       return FocusEventWidget._can_loose_focus(self)
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      if isinstance(self._w, FocusEventWidget):
-        ret = self._w.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self._w)
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      if isinstance(self._w, FocusEventWidget):
-        ret = self._w.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self._w)
 
 class WidgetDecorationMore(More, urwid.WidgetDecoration):
   def __init__(self, original_widget):
@@ -196,23 +205,13 @@ class WidgetDecorationMore(More, urwid.WidgetDecoration):
     else:
       return FocusEventWidget._can_loose_focus(self)
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      if isinstance(self._original_widget, FocusEventWidget):
-        ret = self._original_widget.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self._original_widget)
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      if isinstance(self.original_widget, FocusEventWidget):
-        ret = self.original_widget.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self._original_widget)
 
 class WidgetPlaceholderMore(WidgetDecorationMore, urwid.WidgetPlaceholder):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, original_widget):
     WidgetDecorationMore.__init__(self, original_widget)
 
@@ -227,26 +226,36 @@ class AttrWrapMore(WidgetDecorationMore, urwid.AttrWrap):
     urwid.AttrWrap.__init__(self, w, attr, focus_attr)
 
 class PaddingMore(WidgetDecorationMore, urwid.Padding):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, w, align = urwid.LEFT, width = urwid.PACK, min_width = None, left = 0, right = 0):
     WidgetDecorationMore.__init__(self, w)
     urwid.Padding.__init__(self, w, align, width, min_width, left, right)
 
 class FillerMore(WidgetDecorationMore, urwid.Filler):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, body, valign = "middle", height = None, min_height = None):
     WidgetDecorationMore.__init__(self, body)
     urwid.Filler.__init__(self, body, valign, height, min_height)
 
 class BoxAdapterMore(WidgetDecorationMore, urwid.BoxAdapter):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, box_widget, height):
     WidgetDecorationMore.__init__(self, box_widget)
     urwid.BoxAdapter.__init__(self, box_widget, height)
 
 class WidgetContainerMore(More, urwid.WidgetContainer):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, widget_list):
     More.__init__(self)
     urwid.WidgetContainer.__init__(self, widget_list)
 
 class FrameMore(More, urwid.Frame):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   _filler_widget_class = FillerMore
   def __init__(self, body, header = None, footer = None, focus_part = 'body'):
     More.__init__(self)
@@ -308,25 +317,13 @@ class FrameMore(More, urwid.Frame):
     if ok:
       urwid.Frame.set_focus(self, part)
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      focus_w = self._get_focus_widget(self.get_focus())
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self._get_focus_widget(self.get_focus()))
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      focus_w = self._get_focus_widget(self.get_focus())
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self._get_focus_widget(self.get_focus()))
 
 class PileMore(More, urwid.Pile):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, widget_list, focus_item = None):
     More.__init__(self)
     urwid.Pile.__init__(self, widget_list, focus_item)
@@ -385,37 +382,26 @@ class PileMore(More, urwid.Pile):
       urwid.Pile.set_focus(self, item)
     if self.has_focus:
       focus_w = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ok = focus_w.loose_focus()
-      if ok:
-        if type(item) == int:
-          focus_w = self.widget_list[item]
-        else:
-          focus_w = item
-        if isinstance(focus_w, FocusEventWidget):
-          ok = focus_w.gain_focus()
+      if type(item) == int:
+        new_focus_w = self.widget_list[item]
+      else:
+        new_focus_w = item
+      if focus_w != new_focus_w:
+        if focus_w and isinstance(focus_w, FocusEventWidget):
+          ok = focus_w.loose_focus()
+        if ok:
+          if isinstance(new_focus_w, FocusEventWidget):
+            ok = new_focus_w.gain_focus()
     if ok:
       urwid.Pile.set_focus(self, item)
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      focus_w = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self.get_focus())
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      focus_w = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self.get_focus())
 
 class ColumnsMore(More, urwid.Columns):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, widget_list, dividechars = 0, focus_column = None, min_width = 1, box_columns = None):
     More.__init__(self)
     urwid.Columns.__init__(self, widget_list, dividechars, focus_column, min_width, box_columns)
@@ -433,26 +419,59 @@ class ColumnsMore(More, urwid.Columns):
           ok = focus_w.gain_focus()
     if ok:
       urwid.Columns.set_focus_column(self, num)
+  def set_focus(self, item):
+    """Set the item in focus. item -- widget or integer index"""
+    if type(item) == int:
+      assert item>=0 and item<len(self.widget_list)
+      position = item
+    else:
+      position = self.widget_list.index(item)
+    ok = True
+    if self.has_focus:
+      if self.get_focus_column():
+        focus_w = self.get_focus()
+        if isinstance(focus_w, FocusEventWidget):
+          ok = focus_w.loose_focus()
+      if ok:
+        focus_w = self.widget_list[position]
+        if isinstance(focus_w, FocusEventWidget):
+          ok = focus_w.gain_focus()
+    if ok:
+      self.focus_col = position
+      self._invalidate()
+    return ok
+  def mouse_event(self, size, event, button, col, row, focus):
+    """
+    Send event to appropriate column.
+    May change focus on button 1 press.
+    """
+    widths = self.column_widths(size)
+    x = 0
+    for i in range(len(widths)):
+      if col < x:
+        return False
+      w = self.widget_list[i]
+      end = x + widths[i]
+      if col >= end:
+        x = end + self.dividechars
+        continue
+      focus = focus and self.focus_col == i
+      ok = True
+      if urwid.util.is_mouse_press(event) and button == 1:
+        if w.selectable():
+          ok = self.set_focus(w)
+      if not ok or not hasattr(w,'mouse_event'):
+        return False
+      return w.mouse_event((end-x,)+size[1:], event, button, col - x, row, focus)
+    return False
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      col = self.get_focus_column()
-      if col and isinstance(self.get_focus(), FocusEventWidget):
-        ret = self.get_focus().gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self.get_focus())
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      col = self.get_focus_column()
-      if col and isinstance(self.get_focus(), FocusEventWidget):
-        ret = self.get_focus().loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self.get_focus())
 
 class GridFlowMore(More, urwid.GridFlow):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   _column_widget_class = ColumnsMore
   _padding_widget_class = PaddingMore
   _pile_widget_class = PileMore
@@ -529,102 +548,73 @@ class GridFlowMore(More, urwid.GridFlow):
     if ok:
       urwid.GridFlow.set_focus(self, cell)
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      focus_w = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self.get_focus())
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      focus_w = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self.get_focus())
 
 class OverlayMore(More, urwid.Overlay):
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, top_w, bottom_w, align, width, valign, height, min_width = None, min_height = None):
     More.__init__(self)
     urwid.Overlay.__init__(self, top_w, bottom_w, align, width, valign, height, min_width, min_height)
   def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      focus_w = self.top_w
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
+    return self._gain_focus_with_subwidget(self.top_w)
   def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      focus_w = self.top_w
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
+    return self._loose_focus_with_subwidget(self.top_w)
 
 class ListBoxMore(More, urwid.ListBox):
-  _default_sensitive_attr = ('', '')
-  _default_unsensitive_attr = ('', '')
+  _default_sensitive_attr = 'body'
+  _default_unsensitive_attr = 'body'
   def __init__(self, body):
     More.__init__(self)
     urwid.ListBox.__init__(self, body)
-  def gain_focus(self):
-    ret = self._gain_focus()
-    if ret:
-      focus_w, _junk = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.gain_focus()
-      else:
-        ret = self.emit_focusgain()
-    return ret
-  def loose_focus(self):
-    ret = self._loose_focus()
-    if ret:
-      focus_w, _junk = self.get_focus()
-      if focus_w and isinstance(focus_w, FocusEventWidget):
-        ret = focus_w.loose_focus()
-      else:
-        ret = self.emit_focuslost()
-    return ret
-
-class FocusListWalker(urwid.SimpleListWalker):
-  def set_focus(self, position):
-    """Set focus position."""
-    assert type(position) == int
-    #print "focus list walker set focus focus={0}, position={1}".format(self.focus, position)
+  def change_focus(self, size, position, offset_inset = 0, coming_from = None, cursor_coords = None, snap_rows = None):
+    old_widget, old_focus_pos = self.body.get_focus()
+    new_focus_pos = position
+    # hack for found the current widget in the list walker.
+    new_widget = self.body.get_next(new_focus_pos - 1)[0]
     ok = True
-    if self.focus != position and len(self) > 1:
-      oldw = self[self.focus]
-      #print "oldw", oldw
-      neww = self[position]
-      #print "neww", neww
-      if isinstance(oldw, FocusEventWidget):
-        print "verify and try to perform a loose focus on oldw"
-        ok = oldw.loose_focus()
-        print "* result", ok
-      if ok and isinstance(neww, FocusEventWidget):
-        print "verify that neww can gain focus"
-        ok = neww._can_gain_focus()
-        print "* result", ok
+    if isinstance(old_widget, FocusEventWidget):
+      ok = old_widget.loose_focus()
+    if ok and isinstance(new_widget, FocusEventWidget):
+      ok = new_widget.gain_focus()
     if ok:
-      print "ok, so will move focus to position", position
-      urwid.SimpleListWalker.set_focus(self, position)
-      print "focus = ${f}, position = ${p}, len = ${l}".format(f = self.focus, p = position, l = len(self))
-      if self.focus != position and len(self) > 1:
-        neww = self[position]
-        print "neww", neww
-        if isinstance(neww, FocusEventWidget):
-          print "try to perform a gain focus on neww"
-          neww.gain_focus()
-    raw_input("ListWalker move")
+      urwid.ListBox.change_focus(self, size, position, offset_inset, coming_from, cursor_coords, snap_rows)
+    return ok
+  def mouse_event(self, size, event, button, col, row, focus):
+    """
+    Pass the event to the contained widgets.
+    May change focus on button 1 press.
+    """
+    (maxcol, maxrow) = size
+    middle, top, bottom = self.calculate_visible((maxcol, maxrow), focus = True)
+    if middle is None:
+      return False
+    _ignore, focus_widget, focus_pos, focus_rows, cursor = middle
+    trim_top, fill_above = top
+    _ignore, fill_below = bottom
+    fill_above.reverse() # fill_above is in bottom-up order
+    w_list = (fill_above + [(focus_widget, focus_pos, focus_rows)] + fill_below)
+    wrow = -trim_top
+    for w, w_pos, w_rows in w_list:
+      if wrow + w_rows > row:
+        break
+      wrow += w_rows
+    else:
+      return False
+    focus = focus and w == focus_widget
+    ok = True
+    if urwid.util.is_mouse_press(event) and button == 1:
+      if w.selectable():
+        ok = self.change_focus((maxcol,maxrow), w_pos, wrow)
+    if not ok or not hasattr(w,'mouse_event'):
+      return False
+    return w.mouse_event((maxcol,), event, button, col, row-wrow, focus)
+  def gain_focus(self):
+    return self._gain_focus_with_subwidget(self.get_focus()[0])
+  def loose_focus(self):
+    return self._loose_focus_with_subwidget(self.get_focus()[0])
 
 class LineBoxMore(WidgetDecorationMore, urwid.LineBox):
   def __init__(self, original_widget, title = "", tlcorner = u'┌', tline = u'─', lline = u'│', trcorner = u'┐', blcorner = u'└', rline = u'│', bline = u'─', brcorner = u'┘'):
