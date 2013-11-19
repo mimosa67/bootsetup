@@ -57,6 +57,6 @@ class BootSetupCurses(BootSetup):
 
   def error_dialog(self, message, title = None, parent = None):
     if not title:
-      title = _("/!\ ERROR")
+      title = "/!\ " + _("ERROR")
     dialog = urwidm.TextDialog(('error', unicode(message)), 10, 60, ('important', unicode(title)))
     self._show_ui_dialog(dialog, parent)
