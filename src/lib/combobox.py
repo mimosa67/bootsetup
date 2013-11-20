@@ -213,7 +213,7 @@ class ComboBoxMore(urwid.PopUpLauncher, urwidm.WidgetWrapMore):
 
 class ComboBoxEditMore(ComboBoxMore):
   def _create_cbox_widget(self):
-    return urwidm.EditMore(edit_text = self.DOWN_ARROW)
+    return urwidm.EditMore(edit_text = u'')
   def keypress(self, size, key):
     """
     If we press enter, be a combo box!
@@ -228,7 +228,6 @@ class ComboBoxEditAddMore(ComboBoxEditMore):
     if key == '+':
       (item, pos) = self.get_selected_item()
       if pos is None:
-        # add item to the list
         self.list.append(item)
     else:
       return self.__super.keypress(size, key)
@@ -243,9 +242,47 @@ l1 = [
   u"val2",
   u"val3",
 ]
+class ComplexWidget(urwidm.WidgetWrapMore):
+  def __init__(self, left = u'', center = u'', right = u''):
+    w = urwidm.ColumnsMore([urwid.Text(left), urwid.Text(center), urwid.Text(right)])
+    self.__super.__init__(w)
+  def get_text(self):
+    return self._w.widget_list[1].text
+  def set_text(self, text):
+    self._w.widget_list[1].set_text(text)
+  text = property(get_text)
+  def set_sensitive_attr(self, attr):
+    if type(attr) != tuple:
+      attr = (attr, attr)
+    self._sensitive_attr = attr
+    try:
+      if hasattr(self._w, 'sensitive_attr'):
+        wself._.sensitive_attr = attr
+      for w in self._w.widget_list:
+        if hasattr(w, 'sensitive_attr'):
+          w.sensitive_attr = attr
+    except:
+      pass
+  def set_unsensitive_attr(self, attr):
+    if type(attr) != tuple:
+      attr = (attr, attr)
+    self._unsensitive_attr = attr
+    try:
+      if hasattr(self._w, 'unsensitive_attr'):
+        wself._.unsensitive_attr = attr
+      for w in self._w.widget_list:
+        if hasattr(w, 'unsensitive_attr'):
+          w.unsensitive_attr = attr
+    except:
+      pass
+  def keypress(self, size, key):
+    return key
+  def selectable(self):
+    return True
+
 l2 = [
-  u"prop1",
-  u"prop2",
+  urwidm.SelText(u"prop1"),
+  ComplexWidget(u"l", u"2", u"r"), # still a problem with length computation and with style attributes
 ]
 fill = urwid.Filler(urwidm.PileMore([
   urwid.Padding(urwid.Text("ComboBox tests"), 'center'),
