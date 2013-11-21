@@ -82,8 +82,8 @@ def mountDevice(device, fsType = None, mountPoint = None):
   if ret != 0 and autoMP:
     _deleteMountPoint(mountPoint)
   else:
-    ret = mountPoint
-  return ret
+    return mountPoint
+  return ret == 0
 
 def umountDevice(deviceOrPath, tryLazyUmount = True, deleteMountPoint = True):
   """
@@ -102,7 +102,7 @@ def umountDevice(deviceOrPath, tryLazyUmount = True, deleteMountPoint = True):
        ret = execCall(['umount', '-l', mountPoint], shell = False)
     if ret == 0 and deleteMountPoint:
       _deleteMountPoint(mountPoint)
-    return ret
+    return ret == 0
   else:
     return False
 

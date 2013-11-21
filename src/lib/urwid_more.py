@@ -190,9 +190,9 @@ class ButtonMore(More, urwid.Button):
 class CheckBoxMore(More, urwid.CheckBox):
   _default_sensitive_attr = ('focusable', 'focus_radio')
   states = {
-    True: SelectableIconMore("[X]"),
-    False: SelectableIconMore("[ ]"),
-    'mixed': SelectableIconMore("[#]") }
+    True: SelectableIconMore(u"[X]"),
+    False: SelectableIconMore(u"[ ]"),
+    'mixed': SelectableIconMore(u"[#]") }
   def __init__(self, label, state = False, has_mixed = False, on_state_change = None, user_data = None):
     More.__init__(self)
     urwid.CheckBox.__init__(self, label, state, has_mixed, on_state_change, user_data)
@@ -200,9 +200,9 @@ class CheckBoxMore(More, urwid.CheckBox):
 class RadioButtonMore(More, urwid.RadioButton):
   _default_sensitive_attr = ('focusable', 'focus_radio')
   states = {
-    True: SelectableIconMore("(X)"),
-    False: SelectableIconMore("( )"),
-    'mixed': SelectableIconMore("(#)") }
+    True: SelectableIconMore(u"(X)"),
+    False: SelectableIconMore(u"( )"),
+    'mixed': SelectableIconMore(u"(#)") }
   def __init__(self, group, label, state = "first True", on_state_change = None, user_data = None):
     More.__init__(self)
     urwid.RadioButton.__init__(self, group, label, state, on_state_change, user_data)
@@ -762,7 +762,7 @@ class ComboBox(WidgetWrapMore):
     callback  : function that takes (combobox, sel_index, user_args = None)
     user_args : user_args in the callback
     """
-    self.DOWN_ARROW = "   ↓"
+    self.DOWN_ARROW = u"   ↓"
     self.label = urwid.Text(label)
     if items is None:
       items = []
@@ -949,7 +949,7 @@ class Dialog2(WidgetWrapMore):
 class TextDialog(Dialog2):
   """ Simple dialog with text and "OK" button. """
   def __init__(self, text, height, width, header=None, align='left',
-    buttons=(_('OK'), 1)):
+    buttons=(_(u'OK'), 1)):
     l = [urwid.Text(text)]
     body = ListBoxMore(urwid.SimpleListWalker(l))
     body = AttrWrapMore(body, 'body')
@@ -967,13 +967,13 @@ class TextDialog(Dialog2):
 
 class InputDialog(Dialog2):
   """ Simple dialog with text and entry. """
-  def __init__(self, text, height, width, ok_name=_('OK'), edit_text=''):
+  def __init__(self, text, height, width, ok_name=_(u'OK'), edit_text=''):
     self.edit = EditMore(wrap='clip', edit_text=edit_text)
     body = ListBoxMore(urwid.SimpleListWalker([self.edit]))
     body = AttrWrapMore(body, 'editbx', 'editfc')
     Dialog2.__init__(self, text, height, width, body)
     self.frame.set_focus('body')
-    self.add_buttons([(ok_name, 0), (_('Cancel'), -1)])
+    self.add_buttons([(ok_name, 0), (_(u'Cancel'), -1)])
   def unhandled_key(self, size, k):
     """ Handle keys. """
     if k in ('up', 'page up'):
@@ -1019,22 +1019,22 @@ class OptCols(WidgetWrapMore):
       newKeys = {}
       for key in keys:
         newkey = reduce(lambda s, (f, t): s.replace(f, t), [
-          ('ctrl ', 'Ctrl+'),
-          ('meta ', 'Alt+'),
-          ('left', '←'),
-          ('right', '→'),
-          ('up', '↑'),
-          ('down', '↓'),
-          ('page up', 'Page Up'),
-          ('page down', 'Page Down'),
-          ('esc', 'ESC'),
-          ('enter', 'Enter')],
+          (u'ctrl ', u'Ctrl+'),
+          (u'meta ', u'Alt+'),
+          (u'left', u'←'),
+          (u'right', u'→'),
+          (u'up', u'↑'),
+          (u'down', u'↓'),
+          (u'page up', u'Page Up'),
+          (u'page down', u'Page Down'),
+          (u'esc', u'ESC'),
+          (u'enter', u'Enter')],
           key)
         if re.match(r"^[a-z]([0-9]*)$", newkey):
           newkey = newkey.upper()
         newKeys[key] = newkey
       desc = cmd[1]
-      keyText = " / ".join([newKeys[key] for key in keys]) + ":"
+      keyText = u" / ".join([newKeys[key] for key in keys]) + ":"
       col = ClickCols([('fixed', len(keyText) + 1, urwid.Text((attrs[0], keyText))), urwid.Text((attrs[1], desc))], handler, keys)
       textList.append(col)
     cols = ColumnsMore(textList)

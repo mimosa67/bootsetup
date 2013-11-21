@@ -10,4 +10,5 @@ if [ -d data/po ] && [ $(find data/po -maxdepth 1 -name '*.po'|wc -l) -gt 0 ]; t
     fi
   done
 fi
+[ -e src/bootsetup.log ] && rm src/bootsetup.log
 ./src/bootsetup.py --test "$@"

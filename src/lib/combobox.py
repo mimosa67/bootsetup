@@ -59,7 +59,7 @@ class ComboBoxMore(urwid.PopUpLauncher, urwidm.WidgetWrapMore):
       if key in 'esc':
         self.set_selected_pos(None)
         self._emit('close')
-      if key in ('enter', ' '):
+      if key in ('enter', u' '):
         self.set_selected_item(self._listw.get_focus())
         self._emit('validate')
       else:
@@ -285,14 +285,14 @@ l2 = [
   ComplexWidget(u"l", u"2", u"r"), # still a problem with length computation and with style attributes
 ]
 fill = urwid.Filler(urwidm.PileMore([
-  urwid.Padding(urwid.Text("ComboBox tests"), 'center'),
+  urwid.Padding(urwid.Text(u"ComboBox tests"), 'center'),
   urwid.Divider(),
   urwid.Padding(ComboBoxMore(items = l1, focus = 0), 'center', 10),
   urwid.Divider(),
-  urwid.Padding(urwid.Text("Use + to add an item to the list"), 'center'),
+  urwid.Padding(urwid.Text(u"Use + to add an item to the list"), 'center'),
   urwid.Padding(ComboBoxEditAddMore(label = u"props:", items = l2, focus = 0), 'center', 20),
   urwid.Divider(),
-  urwid.Padding(urwid.Text("Q or F10 to quit"), 'center'),
+  urwid.Padding(urwid.Text(u"Q or F10 to quit"), 'center'),
 ]))
 loop = urwid.MainLoop(
     fill,
