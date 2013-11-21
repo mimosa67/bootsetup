@@ -23,36 +23,54 @@ class ComboBoxMore(urwid.PopUpLauncher, urwidm.WidgetWrapMore):
       items     : stuff to include in the combobox
       show_first: index of the element in the list to pick first
       """
+      normal_attr = item_attrs[0]
+      focus_attr = item_attrs[1]
+      sepLeft = urwidm.AttrMapMore(urwid.SolidFill(u"│"), normal_attr)
+      sepRight = urwidm.AttrMapMore(urwid.SolidFill(u"│"), normal_attr)
+      sepBottomLeft = urwidm.AttrMapMore(urwid.Text(u"└"), normal_attr)
+      sepBottomRight = urwidm.AttrMapMore(urwid.Text(u"┘"), normal_attr)
+      sepBottomCenter = urwidm.AttrMapMore(urwid.Divider(u"─"), normal_attr)
       self._content = []
       for item in items:
         if isinstance(item, urwid.Widget):
-          if item.selectable and hasattr(item, "text"): # duck typing
+          if item.selectable and hasattr(item, "text") and hasattr(item, "attr"): # duck typing
             self._content.append(item)
           else:
-            raise ValueError, "items in ComboBoxMore should be strings or selectable widget with a text property"
+            raise ValueError, "items in ComboBoxMore should be strings or selectable widget with a text and attr properties"
         else:
           self._content.append(urwidm.SelText(item))
-      sepLeft = urwidm.AttrMapMore(urwid.SolidFill(u"│"), item_attrs[0])
-      sepRight = urwidm.AttrMapMore(urwid.SolidFill(u"│"), item_attrs[0])
-      sepBottomLeft = urwidm.AttrMapMore(urwid.Text(u"└"), item_attrs[0])
-      sepBottomRight = urwidm.AttrMapMore(urwid.Text(u"┘"), item_attrs[0])
-      sepBottomCenter = urwidm.AttrMapMore(urwid.Divider(u"─"), item_attrs[0])
-      self._deco = [sepLeft, sepRight, sepBottomLeft, sepBottomRight, sepBottomCenter]
-      self.set_item_attrs(item_attrs)
       self._listw = urwidm.PileMore(self._content)
       if show_first is None:
         show_first = 0
       self.set_selected_pos(show_first)
-      self.__super.__init__(urwid.Filler(
-        urwidm.ColumnsMore([
-          ('fixed', 1, urwidm.PileMore([urwid.BoxAdapter(sepLeft, len(items)), sepBottomLeft])),
-          urwidm.PileMore([self._listw, sepBottomCenter]),
-          ('fixed', 1, urwidm.PileMore([urwid.BoxAdapter(sepRight, len(items)), sepBottomRight])),
-        ]),
-      ))
+      columns = urwidm.ColumnsMore([
+        ('fixed', 1, urwidm.PileMore([urwid.BoxAdapter(sepLeft, len(items)), sepBottomLeft])),
+        urwidm.PileMore([self._listw, sepBottomCenter]),
+        ('fixed', 1, urwidm.PileMore([urwid.BoxAdapter(sepRight, len(items)), sepBottomRight])),
+      ])
+      filler = urwidm.FillerMore(columns)
+      self.__super.__init__(filler)
+      self._deco = [sepLeft, sepRight, sepBottomLeft, sepBottomRight, sepBottomCenter, self._listw]
+      self.set_item_attrs(item_attrs)
+    def get_size(self):
+      maxw = 1
+      maxh = 0
+      for widget in self._content:
+        w = 0
+        h = 0
+        for s in (None, ()):
+          try:
+            (w, h) = widget.pack(s)
+          except:
+            pass
+        maxw = max(maxw, w + 1)
+        maxh += h
+      return (maxw + 2, maxh + 1)
     def set_item_attrs(self, item_attrs):
       for w in self._content:
-        w.attr = item_attrs
+        if hasattr(w, "attr"):
+          w.attr = item_attrs
+      w.attr = item_attrs
       for w in self._deco:
         w.attr = item_attrs
     def keypress(self, size, key):
@@ -197,8 +215,7 @@ class ComboBoxMore(urwid.PopUpLauncher, urwidm.WidgetWrapMore):
     self._overlay_left = 0
     if self.label.text:
       self._overlay_left = len(self.label.text) + 1
-    self._overlay_width = max(1, 1, *[len(self._item_text(i)) for i in self.list]) + 2
-    self._overlay_height = len(self.list) + 1
+    (self._overlay_width, self._overlay_height) = popup.get_size()
     urwid.connect_signal(popup, 'close', lambda x: self.close_pop_up())
     urwid.connect_signal(popup, 'validate', self.validate_pop_up)
     return popup
@@ -244,7 +261,11 @@ l1 = [
 ]
 class ComplexWidget(urwidm.WidgetWrapMore):
   def __init__(self, left = u'', center = u'', right = u''):
-    w = urwidm.ColumnsMore([urwid.Text(left), urwid.Text(center), urwid.Text(right)])
+    w = urwidm.ColumnsMore([
+      ('fixed', len(left), urwid.Text(left)),
+      ('fixed', len(center), urwid.Text(center)),
+      ('fixed', len(right), urwid.Text(right))
+    ])
     self.__super.__init__(w)
   def get_text(self):
     return self._w.widget_list[1].text
@@ -257,7 +278,7 @@ class ComplexWidget(urwidm.WidgetWrapMore):
     self._sensitive_attr = attr
     try:
       if hasattr(self._w, 'sensitive_attr'):
-        wself._.sensitive_attr = attr
+        self._w.sensitive_attr = attr
       for w in self._w.widget_list:
         if hasattr(w, 'sensitive_attr'):
           w.sensitive_attr = attr
@@ -279,10 +300,18 @@ class ComplexWidget(urwidm.WidgetWrapMore):
     return key
   def selectable(self):
     return True
+  def pack(self, size = None, focus = False):
+    if size is None:
+      w = 0
+      for sw in self._w.widget_list:
+        w += len(sw.text)
+      return (w, 1)
+    else:
+      self.__super.pack(size, focus)
 
 l2 = [
   urwidm.SelText(u"prop1"),
-  ComplexWidget(u"l", u"2", u"r"), # still a problem with length computation and with style attributes
+  ComplexWidget(u"«left,", u"prop2", u",right»"),
 ]
 fill = urwid.Filler(urwidm.PileMore([
   urwid.Padding(urwid.Text(u"ComboBox tests"), 'center'),
@@ -308,8 +337,8 @@ loop = urwid.MainLoop(
       ('focus_edit', 'yellow', 'black'),
       ('focus_icon', 'yellow', 'black'),
       ('focus_radio', 'yellow', 'black'),
-      ('comboitem', 'black', 'light gray'),
-      ('comboitem_focus', 'black', 'light green'),
+      ('comboitem', 'dark blue', 'dark cyan'),
+      ('comboitem_focus', 'black', 'brown'),
       ('error', 'white', 'light red'),
       ('focus_error', 'light red', 'black'),
     ],
