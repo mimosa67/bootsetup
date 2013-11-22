@@ -8,6 +8,7 @@ Based on the work on curses_misc.py in Wicd.
 __copyright__ = 'Copyright 2013-2014, Salix OS, 2008-2009 Andrew Psaltis'
 __license__ = 'GPL2+'
 
+#from urwid import *
 import urwid
 import gettext
 import re
@@ -696,64 +697,102 @@ class SelText(More, urwid.Text):
     """Don't handle any keys."""
     return key
 
-class ComboBoxException(Exception):
-  """ Custom exception. """
-  pass
-
-# A "combo box" of SelTexts
-# I based this off of the code found here:
-# http://excess.org/urwid/browser/contrib/trunk/rbreu_menus.py
-# This is a hack/kludge.  It isn't without quirks, but it more or less works.
-# We need to wait for changes in urwid's Canvas API before we can actually
-# make a real ComboBox.
-class ComboBox(WidgetWrapMore):
+class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
   """A ComboBox of text objects"""
   class ComboSpace(WidgetWrapMore):
     """The actual menu-like space that comes down from the ComboBox"""
-    def __init__(self, items, body, ui, show_first, pos = (0, 0)):
+    signals = ['close', 'validate']
+    def __init__(self, items, show_first = 0, item_attrs = ('comboitem', 'comboitem_focus')):
       """
-      body      : parent widget
       items     : stuff to include in the combobox
-      ui        : the screen
       show_first: index of the element in the list to pick first
-      pos       : a tuple of (row, col) where to put the list
       """
-      #Calculate width and height of the menu widget:
-      height = len(items)
-      width = 0
-      for entry in items:
-        if len(entry) > width:
-          width = len(entry)
-      self._content = [SelText(w) for w in items]
-      self._listbox = urwid.ListBox(urwid.SimpleListWalker(self._content))
-      self._listbox.set_focus(show_first)
-      overlay = urwid.Overlay(self._listbox, body, ('fixed left', pos[0]), width + 2, ('fixed top', pos[1]), height)
-      self.__super.__init__(overlay)
-    def show(self, ui, display):
-      """ Show widget. """
-      dim = ui.get_cols_rows()
-      keys = True
-      #Event loop:
-      while True:
-        if keys:
-          ui.draw_screen(dim, self.render(dim, True))
-        keys = ui.get_input()
-        if "window resize" in keys:
-          dim = ui.get_cols_rows()
-        if "esc" in keys:
-          return None
-        if "enter" in keys:
-          (wid, pos) = self._listbox.get_focus()
-          (text, attr) = wid.get_text()
-          return text
-        for k in keys:
-          #Send key to underlying widget:
-          self._w.keypress(dim, k)
+      normal_attr = item_attrs[0]
+      focus_attr = item_attrs[1]
+      sepLeft = AttrMapMore(urwid.SolidFill(u"│"), normal_attr)
+      sepRight = AttrMapMore(urwid.SolidFill(u"│"), normal_attr)
+      sepBottomLeft = AttrMapMore(urwid.Text(u"└"), normal_attr)
+      sepBottomRight = AttrMapMore(urwid.Text(u"┘"), normal_attr)
+      sepBottomCenter = AttrMapMore(urwid.Divider(u"─"), normal_attr)
+      self._content = []
+      for item in items:
+        if isinstance(item, urwid.Widget):
+          if item.selectable and hasattr(item, "text") and hasattr(item, "attr"): # duck typing
+            self._content.append(item)
+          else:
+            raise ValueError, "items in ComboBoxMore should be strings or selectable widget with a text and attr properties"
+        else:
+          self._content.append(SelText(item))
+      self._listw = PileMore(self._content)
+      if show_first is None:
+        show_first = 0
+      self.set_selected_pos(show_first)
+      columns = ColumnsMore([
+        ('fixed', 1, PileMore([urwid.BoxAdapter(sepLeft, len(items)), sepBottomLeft])),
+        PileMore([self._listw, sepBottomCenter]),
+        ('fixed', 1, PileMore([urwid.BoxAdapter(sepRight, len(items)), sepBottomRight])),
+      ])
+      filler = FillerMore(columns)
+      self.__super.__init__(filler)
+      self._deco = [sepLeft, sepRight, sepBottomLeft, sepBottomRight, sepBottomCenter, self._listw]
+      self.set_item_attrs(item_attrs)
+    def get_size(self):
+      maxw = 1
+      maxh = 0
+      for widget in self._content:
+        w = 0
+        h = 0
+        for s in (None, ()):
+          try:
+            (w, h) = widget.pack(s)
+          except:
+            pass
+        maxw = max(maxw, w + 1)
+        maxh += h
+      return (maxw + 2, maxh + 1)
+    def set_item_attrs(self, item_attrs):
+      for w in self._content:
+        if hasattr(w, "attr"):
+          w.attr = item_attrs
+      w.attr = item_attrs
+      for w in self._deco:
+        w.attr = item_attrs
+    def keypress(self, size, key):
+      if key in 'esc':
+        self.set_selected_pos(None)
+        self._emit('close')
+      if key in ('enter', u' '):
+        self.set_selected_item(self._listw.get_focus())
+        self._emit('validate')
+      else:
+        return self.__super.keypress(size, key)
+    def get_selected_item(self):
+      return self._selected_item
+    def set_selected_item(self, item):
+      try:
+        pos = [i.text for i in self._content].index(item.text)
+      except:
+        pos = None
+      self.set_selected_pos(pos)
+    selected_item = property(get_selected_item, set_selected_item)
+    def get_selected_pos(self):
+      return self._selected_pos
+    def set_selected_pos(self, pos):
+      if pos is not None and pos < len(self._content):
+        self._listw.set_focus(pos)
+        self._selected_item = self._content[pos].text
+        self._selected_pos = pos
+      else:
+        self._selected_item = None
+        self._selected_pos = None
+    selected_pos = property(get_selected_pos, set_selected_pos)
 
   _default_sensitive_attr = ('body', '')
   _default_unsensitive_attr = ('body', '')
+  DOWN_ARROW = u"↓"
+  signals = ['displaycombo']
   
-  def __init__(self, label = '', items = None, use_enter = True, focus = 0, callback = None, user_args = None):
+  def __init__(self, label = u'', items = None, use_enter = True, focus = 0, callback = None, user_args = None):
     """
     label     : bit of text that preceeds the combobox.  If it is "", then ignore it
     items     : stuff to include in the combobox
@@ -762,105 +801,132 @@ class ComboBox(WidgetWrapMore):
     callback  : function that takes (combobox, sel_index, user_args = None)
     user_args : user_args in the callback
     """
-    self.DOWN_ARROW = u"   ↓"
     self.label = urwid.Text(label)
     if items is None:
       items = []
-    self.list = items
-    self.overlay = None
-    self.cbox = SelText(self.DOWN_ARROW)
+    self.set_list(items)
+    self.cbox = self._create_cbox_widget()
     if label:
-      w = urwid.Columns([('fixed', len(label), self.label), self.cbox], dividechars = 1)
+      w = ColumnsMore(
+        [
+          ('fixed', len(label), self.label),
+          self.cbox,
+          ('fixed', len(self.DOWN_ARROW), urwid.Text(self.DOWN_ARROW))
+        ], dividechars = 1)
     else:
-      w = urwid.Columns([self.cbox])
+      w = ColumnsMore(
+        [
+          self.cbox,
+          ('fixed', len(self.DOWN_ARROW), urwid.Text(self.DOWN_ARROW))
+        ], dividechars = 1)
     self.__super.__init__(w)
-    # We need this to pick our keypresses
+    self.combo_attrs = ('comboitem', 'comboitem_focus')
     self.use_enter = use_enter
-    if urwid.VERSION < (1, 1, 0):
-      self.focus = focus
-    else:
-      self._w.focus_position = focus
+    self.set_selected_item(focus)
+    self._overlay_left = 0
+    self._overlay_width = len(self.DOWN_ARROW)
+    self._overlay_height = len(items)
     self.callback = callback
     self.user_args = user_args
-    # Widget references to simplify some things
-    self.parent = None
-    self.ui = None
-    self.row = None
-  def set_list(self, items):
-    """ Populate widget list. """
-    self.list = items
-  def set_focus(self, index):
-    """ Set widget focus. """
-    if urwid.VERSION < (1, 1, 0):
-      self.focus = index
-    else:
+    urwid.connect_signal(self, 'displaycombo', self.displaycombo)
+  def _create_cbox_widget(self):
+    return SelText(u'')
+  def _set_cbox_text(self, text):
+    ok = False
+    if not ok and hasattr(self.cbox, "set_text"):
       try:
-        self._w.focus_position = index
-      except IndexError:
+        self.cbox.set_text(text)
+        ok = True
+      except:
         pass
-    self.cbox.set_text(self.list[index] + self.DOWN_ARROW)
-    if self.overlay:
-      self.overlay._listbox.set_focus(index)
-  def set_combo_attrs(self, normal_attr, focus_attr):
-    if self.overlay is None:
-      raise ComboBoxException('ComboBox must be built before use!')
-    for item in self.overlay._content:
-      item.attr = (normal_attr, focus_attr)
-  def rebuild_combobox(self):
-    """ Rebuild combobox. """
-    self.build_combobox(self.parent, self.ui, self.row)
-  def build_combobox(self, parent, ui, row):
-    """ Build combobox. """
-    s = self.label.text
-    if urwid.VERSION < (1, 1, 0):
-      index = self.focus
+    if not ok and hasattr(self.cbox, "set_edit_text"):
+      try:
+        self.cbox.set_edit_text(text)
+        ok = True
+      except:
+        pass
+    if not ok:
+      raise Exception, "Do not know how to set the text in the widget {0}".format(self.cbox)
+  def _item_text(self, item):
+    if isinstance(item, basestring):
+      return item
     else:
-      index = self._w.focus_position
-    self.cbox.set_text(self.list[index] + self.DOWN_ARROW)
-    if s:
-      w = urwid.Columns([('fixed', len(s), self.label), self.cbox], dividechars = 1)
-      self.overlay = self.ComboSpace(self.list, parent, ui, index, pos = (len(s) + 1, row))
+      return item.text
+  def get_selected_item(self):
+    """ Return (text, index) or (text, None) if the selected text is not in the list """
+    curr_text = self.cbox.text
+    try:
+      index = [self._item_text(i) for i in self.list].index(curr_text)
+    except:
+      index = None
+    return (curr_text, index)
+  def set_selected_item(self, index):
+    """ Set widget focus. """
+    if index is not None and isinstance(index, int):
+      curr_text = self._item_text(self.list[index])
+    elif index is not None and isinstance(index, basestring):
+      curr_text = text
     else:
-      w = urwid.Columns([self.cbox])
-      self.overlay = self.ComboSpace(self.list, parent, ui, index, pos = (0, row))
-    self._w = w
-    self._invalidate()
-    self.parent = parent
-    self.ui = ui
-    self.row = row
-  # If we press space or enter, be a combo box!
-  def keypress(self, size, key):
-    """ Handle keypresses. """
-    activate = key == ' ' or (self.use_enter and key == 'enter')
-    if activate:
-      # Die if the user didn't prepare the combobox overlay
-      if self.overlay is None:
-        raise ComboBoxException('ComboBox must be built before use!')
-      retval = self.overlay.show(self.ui, self.parent)
-      if retval is not None:
-        self.set_focus(self.list.index(retval))
-        if self.callback is not None:
-          self.callback(self, self.overlay._listbox.get_focus()[1], self.user_args)
-    return self._w.keypress(size, key)
-  def selectable(self):
-    """ Return whether the widget is selectable. """
-    return self.cbox.selectable()
-  def get_focus(self):
-    """ Return widget focus. """
-    if self.overlay:
-      return self.overlay._listbox.get_focus()
-    else:
-      if urwid.VERSION < (1, 1, 0):
-        return None, self.focus
-      else:
-        return None, self._w.focus_position
+      curr_text = u''
+    self._set_cbox_text(curr_text)
+  selected_item = property(get_selected_item, set_selected_item)
   def get_sensitive(self):
-    """ Return widget sensitivity. """
     return self.cbox.get_sensitive()
   def set_sensitive(self, state):
-    """ Set widget sensitivity. """
     self.cbox.set_sensitive(state)
+  def selectable(self):
+    return self.cbox.selectable()
+  def get_list(self):
+    return self._list
+  def set_list(self, items):
+    self._list = items
+  list = property(get_list, set_list)
+  def set_combo_attrs(self, normal_attr, focus_attr):
+    self.combo_attrs = item_attrs
+  def keypress(self, size, key):
+    """
+    If we press space or enter, be a combo box!
+    """
+    if key == ' ' or (self.use_enter and key == 'enter'):
+      self._emit("displaycombo")
+    else:
+      return self._original_widget.keypress(size, key)
+  def displaycombo(self, src):
+    self.open_pop_up()
+  def create_pop_up(self):
+    index = self.selected_item[1]
+    popup = self.ComboSpace(self.list, index, self.combo_attrs)
+    self._overlay_left = 0
+    if self.label.text:
+      self._overlay_left = len(self.label.text) + 1
+    (self._overlay_width, self._overlay_height) = popup.get_size()
+    urwid.connect_signal(popup, 'close', lambda x: self.close_pop_up())
+    urwid.connect_signal(popup, 'validate', self.validate_pop_up)
+    return popup
+  def get_pop_up_parameters(self):
+    return {'left':self._overlay_left, 'top':1, 'overlay_width':self._overlay_width, 'overlay_height':self._overlay_height}
+  def validate_pop_up(self, popup):
+    pos = self._pop_up_widget.selected_pos
+    self.close_pop_up()
+    if self.callback:
+      self.callback(self, pos, self.user_args)
+    self.set_selected_item(pos)
 
+class ComboBoxEditMore(ComboBoxMore):
+  """
+  A ComboBox with an editable zone.
+  The combo trigger on 'enter' only, disregarding the state for self.use_enter
+  """
+  def _create_cbox_widget(self):
+    return EditMore(edit_text = u'')
+  def keypress(self, size, key):
+    """
+    If we press enter, be a combo box!
+    """
+    if key == 'enter': # discard state of self.use_enter
+      self._emit("displaycombo")
+    else:
+      return self._original_widget.keypress(size, key)
 
 # This is a h4x3d copy of some of the code in Ian Ward's dialog.py example.
 class DialogExit(Exception):
@@ -987,7 +1053,6 @@ class InputDialog(Dialog2):
   def on_exit(self, exitcode):
     """ Handle dialog exit. """
     return exitcode, self.edit.get_edit_text()
-
 
 class ClickCols(WidgetWrapMore):
   """ Clickable menubar. """
