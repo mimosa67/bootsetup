@@ -67,6 +67,8 @@ def mountDevice(device, fsType = None, mountPoint = None):
   """.format(_tempMountDir) 
   if not fsType:
     fsType = getFsType(re.sub(r'/dev/', '', device))
+  if not fsType:
+    return False
   autoMP = False
   if not mountPoint:
     mountPoint = '{0}/{1}'.format(_tempMountDir, os.path.basename(device))
