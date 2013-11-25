@@ -865,6 +865,7 @@ class ComboBox(PopUpLauncherMore):
     self.label = Text(label)
     if items is None:
       items = []
+      focus_index = None
     self.cbox = self._create_cbox_widget()
     if label:
       w = ColumnsMore(

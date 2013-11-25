@@ -225,6 +225,7 @@ a boot menu if several operating systems are available on the same computer.")
     elif self.cfg.cur_bootloader == 'grub2':
       comboBox = self._createComboBox(_("Install Grub2 files on:"), self.cfg.partitions)
       urwidm.connect_signal(comboBox, 'change', self._onGrub2FilesChange)
+      self._onGrub2FilesChange(comboBox, comboBox.selected_item[0], None)
       return comboBox
     else:
       return urwidm.Text("")

@@ -30,12 +30,12 @@ class Grub2:
 
   def __del__(self):
     if self._tmp and os.path.exists(self._tmp):
-      self.__debug("cleanning " + self._tmp)
+      self.__debug(u"cleanning " + self._tmp)
       try:
         if os.path.exists(sltl.mounting._tempMountDir):
-          self.__debug("Remove " + sltl.mounting._tempMountDir)
+          self.__debug(u"Remove " + sltl.mounting._tempMountDir)
           os.rmdir(sltl.mounting._tempMountDir)
-        self.__debug("Remove " + self._tmp)
+        self.__debug(u"Remove " + self._tmp)
         os.rmdir(self._tmp)
       except:
         pass
@@ -50,12 +50,12 @@ class Grub2:
     """
     Return the mount point
     """
-    self.__debug("bootPartition = " + bootPartition)
+    self.__debug(u"bootPartition = " + bootPartition)
     if sltl.isMounted(bootPartition):
-      self.__debug("bootPartition already mounted")
+      self.__debug(u"bootPartition already mounted")
       return sltl.getMountPoint(bootPartition)
     else:
-      self.__debug("bootPartition not mounted")
+      self.__debug(u"bootPartition not mounted")
       return sltl.mountDevice(bootPartition)
 
   def _mountBootInBootPartition(self, mountPoint):
@@ -79,7 +79,7 @@ class Grub2:
       self._procInBootMounted = True
       sltl.execCall(u'mount -o bind /dev {mp}/dev'.format(mp = mountPoint))
       sltl.execCall(u'mount -o bind /proc {mp}/proc'.format(mp = mountPoint))
-      sltl.execCall('mount -o bind /sys {mp}/sys'.format(mp = mountPoint))
+      sltl.execCall(u'mount -o bind /sys {mp}/sys'.format(mp = mountPoint))
 
   def _unbindProcSysDev(self, mountPoint):
     """
@@ -123,7 +123,7 @@ class Grub2:
         self.__debut(u"/boot mounted in " + mountPoint + u", so umount it")
         sltl.execCall(u"chroot {mp} /sbin/umount /boot".format(mp = mountPoint))
       if mountPoint != '/':
-        self.__debug("umain mount point ≠ '/' → umount " + mountPoint)
+        self.__debug(u"umain mount point ≠ '/' → umount " + mountPoint)
         sltl.umountDevice(mountPoint)
     self._bootInBootMounted = False
     self._procInBootMounted = False
