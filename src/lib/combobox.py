@@ -35,7 +35,7 @@ class ComplexWidget(urwidm.WidgetWrapMore):
     ])
     self.__super.__init__(w)
   def get_text(self):
-    return self._w.widget_list[1].text
+    return self._w.widget_list[1].text.upper()
   def set_text(self, text):
     self._w.widget_list[1].set_text(text)
   text = property(get_text)
@@ -79,6 +79,7 @@ class ComplexWidget(urwidm.WidgetWrapMore):
 l2 = [
   urwidm.SelText(u"prop1"),
   ComplexWidget(u"«left,", u"prop2", u",right»"),
+  urwidm.TextMultiValues([u"text", u"multi", u"values"], selPosition = 1),
 ]
 fill = urwidm.Filler(urwidm.PileMore([
   urwidm.Padding(urwidm.Text(u"ComboBox tests"), 'center'),

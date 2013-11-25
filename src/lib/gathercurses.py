@@ -84,14 +84,16 @@ boot partitions:{boot_partitions}
   def _errorDialog(self, message):
     self._bootsetup.error_dialog(message, parent = self._view)
 
-  def _createComboBox(self, label, list):
-    comboBox = urwidm.ComboBox(label, list)
+  def _createComboBox(self, label, elements):
+    l = [urwidm.TextMultiValues(el) if isinstance(el, list) else el for el in elements]
+    comboBox = urwidm.ComboBox(label, l)
     comboBox.set_combo_attrs('combobody', 'combofocus')
     comboBox.cbox.sensitive_attr = ('focusable', 'focus_combo')
     return comboBox
   
-  def _createComboBoxEdit(self, label, list):
-    comboBox = urwidm.ComboBoxEdit(label, list)
+  def _createComboBoxEdit(self, label, elements):
+    l = [urwidm.TextMultiValues(el) if isinstance(el, list) else el for el in elements]
+    comboBox = urwidm.ComboBoxEdit(label, l)
     comboBox.set_combo_attrs('combobody', 'combofocus')
     comboBox.cbox.sensitive_attr = ('focusable', 'focus_edit')
     return comboBox
@@ -179,10 +181,7 @@ a boot menu if several operating systems are available on the same computer.")
     self._view = frame
 
   def _createMbrDeviceSectionView(self):
-    comboList = []
-    for d in self.cfg.disks:
-      comboList.append(" - ".join(d))
-    comboBox = self._createComboBoxEdit(_("Install bootloader on:"), comboList)
+    comboBox = self._createComboBoxEdit(_("Install bootloader on:"), self.cfg.disks)
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -222,10 +221,7 @@ a boot menu if several operating systems are available on the same computer.")
       pile = urwidm.PileMore([table, self._createCenterButtonsWidget([btnEdit, btnCancel])])
       return pile
     elif self.cfg.cur_bootloader == 'grub2':
-      comboList = []
-      for p in self.cfg.partitions:
-        comboList.append(" - ".join(p))
-      comboBox = self._createComboBox(_("Install Grub2 files on:"), comboList)
+      comboBox = self._createComboBox(_("Install Grub2 files on:"), self.cfg.partitions)
       return comboBox
     else:
       return urwidm.Text("")

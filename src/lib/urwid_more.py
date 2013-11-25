@@ -1004,6 +1004,78 @@ class ComboBoxEdit(ComboBox):
       # so just notify about the change
       self._emit_change_event(text, None)
 
+class TextMultiValues(SelText):
+  """
+  A selectable text that render multiple separated values, but which only display one value
+  """
+  def __init__(self, texts, selPosition = 0, join = u' | ', align = LEFT, wrap = SPACE, layout = None):
+    assert texts
+    assert isinstance(texts, list)
+    assert selPosition >= 0 and selPosition < len(texts)
+    self._texts = texts
+    self._selPosition = selPosition
+    self._join = join
+    self._fullText = join.join(texts)
+    self.__super.__init__(texts[selPosition], align, wrap, layout)
+  def set_text(self, markup):
+    self.__super.set_text(markup)
+    if hasattr(self, "texts"):
+      self._texts[self._selPosition] = self._text
+      self._updateTexts(True)
+  def getTexts(self):
+    return self._texts
+  def setTexts(self, texts):
+    self._texts = texts
+    self._updateTexts(True)
+  texts = property(getTexts, setTexts)
+  def getSelPosition(self):
+    return self._selPosition
+  def setSelPosition(self, selPosition):
+    self._selPosition = selPosition
+    self._updateTexts(False)
+  selPosition = property(getSelPosition, setSelPosition)
+  def _updateTexts(self, doFull = True):
+    if doFull:
+      self._fullText = self._join.join(self._texts)
+    self._text = self._texts[self._selPosition]
+  def render(self, size, focus = False):
+    (maxcol,) = size
+    text = self._fullText
+    attr = self.get_text()[1]
+    trans = self.get_line_translation(maxcol, (text, attr))
+    return self.canvas_with_attr(canvas.apply_text_layout(text, attr, trans, maxcol), focus)
+  def _update_cache_translation(self, maxcol, ta):
+    if ta:
+      text, attr = ta
+    else:
+      text = self._fullText
+      attr = self.get_text()[1]
+      self._cache_maxcol = maxcol
+      self._cache_translation = self._calc_line_translation(text, maxcol)
+  def pack(self, size = None, focus = False):
+    text = self._fullText
+    attr = self.get_text()[1]
+    if size is not None:
+      (maxcol,) = size
+      if not hasattr(self.layout, "pack"):
+        return size
+      trans = self.get_line_translation(maxcol, (text, attr))
+      cols = self.layout.pack(maxcol, trans)
+      return (cols, len(trans))
+    i = 0
+    cols = 0
+    while i < len(text):
+      j = text.find('\n', i)
+      if j == -1:
+        j = len(text)
+      c = calc_width(text, i, j)
+      if c > cols:
+        cols = c
+      i = j + 1
+    return (cols, text.count('\n') + 1)
+
+
+
 # This is a h4x3d copy of some of the code in Ian Ward's dialog.py example.
 class DialogExit(Exception):
   """ Custom exception. """
