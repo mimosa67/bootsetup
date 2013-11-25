@@ -3,13 +3,12 @@
 
 import gettext
 gettext.install('combobox')
-import urwid
 import urwid_more as urwidm
 
 def pause():
   raw_input("pause")
 
-class ComboBoxEditAddMore(urwidm.ComboBoxEditMore):
+class ComboBoxEditAdd(urwidm.ComboBoxEdit):
   def keypress(self, size, key):
     if key == '+':
       (item, pos) = self.get_selected_item()
@@ -20,7 +19,7 @@ class ComboBoxEditAddMore(urwidm.ComboBoxEditMore):
 
 def main_event(input):
   if input in ('q', 'Q', 'f10'):
-    raise urwid.ExitMainLoop
+    raise urwidm.ExitMainLoop
 
 l1 = [
   u"val1",
@@ -30,9 +29,9 @@ l1 = [
 class ComplexWidget(urwidm.WidgetWrapMore):
   def __init__(self, left = u'', center = u'', right = u''):
     w = urwidm.ColumnsMore([
-      ('fixed', len(left), urwid.Text(left)),
-      ('fixed', len(center), urwid.Text(center)),
-      ('fixed', len(right), urwid.Text(right))
+      ('fixed', len(left), urwidm.Text(left)),
+      ('fixed', len(center), urwidm.Text(center)),
+      ('fixed', len(right), urwidm.Text(right))
     ])
     self.__super.__init__(w)
   def get_text(self):
@@ -81,17 +80,17 @@ l2 = [
   urwidm.SelText(u"prop1"),
   ComplexWidget(u"«left,", u"prop2", u",right»"),
 ]
-fill = urwid.Filler(urwidm.PileMore([
-  urwid.Padding(urwid.Text(u"ComboBox tests"), 'center'),
-  urwid.Divider(),
-  urwid.Padding(urwidm.ComboBoxMore(items = l1, focus = 0), 'center', 10),
-  urwid.Divider(),
-  urwid.Padding(urwid.Text(u"Use + to add an item to the list"), 'center'),
-  urwid.Padding(ComboBoxEditAddMore(label = u"props:", items = l2, focus = 0), 'center', 20),
-  urwid.Divider(),
-  urwid.Padding(urwid.Text(u"Q or F10 to quit"), 'center'),
+fill = urwidm.Filler(urwidm.PileMore([
+  urwidm.Padding(urwidm.Text(u"ComboBox tests"), 'center'),
+  urwidm.Divider(),
+  urwidm.Padding(urwidm.ComboBox(items = l1), 'center', 10),
+  urwidm.Divider(),
+  urwidm.Padding(urwidm.Text(u"Use + to add an item to the list"), 'center'),
+  urwidm.Padding(ComboBoxEditAdd(label = u"props:", items = l2, focus_index = 1), 'center', 20),
+  urwidm.Divider(),
+  urwidm.Padding(urwidm.Text(u"Q or F10 to quit"), 'center'),
 ]))
-loop = urwid.MainLoop(
+loop = urwidm.MainLoop(
     fill,
     [
       ('body', 'light gray', 'black'),

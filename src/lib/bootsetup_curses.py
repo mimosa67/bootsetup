@@ -13,7 +13,6 @@ import gettext
 import re
 from gathercurses import *
 from bootsetup import *
-import urwid
 import urwid_more as urwidm
 
 class BootSetupCurses(BootSetup):
@@ -26,7 +25,7 @@ class BootSetupCurses(BootSetup):
     ]
 
   def run_setup(self):
-    urwid.set_encoding('utf8')
+    urwidm.set_encoding('utf8')
     if os.getuid() != 0:
       self.error_dialog(_("Root privileges are required to run this program."), _("Sorry!"))
       sys.exit(1)
@@ -35,12 +34,12 @@ class BootSetupCurses(BootSetup):
 
   def _show_ui_dialog(self, dialog, parent = None):
     if not parent:
-      parent = urwid.Filler(urwid.Divider(), 'top')
+      parent = urwidm.Filler(urwidm.Divider(), 'top')
     uiToStop = False
     if self.gc and self.gc._loop:
       ui = self.gc._loop.screen
     else:
-      ui = urwid.raw_display.Screen()
+      ui = urwidm.raw_display.Screen()
       ui.register_palette(self._palette)
     if not ui._started:
       uiToStop = True

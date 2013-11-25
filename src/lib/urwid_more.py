@@ -8,12 +8,11 @@ Based on the work on curses_misc.py in Wicd.
 __copyright__ = 'Copyright 2013-2014, Salix OS, 2008-2009 Andrew Psaltis'
 __license__ = 'GPL2+'
 
-#from urwid import *
-import urwid
+from urwid import *
 import gettext
 import re
 
-class FocusEventWidget(urwid.Widget):
+class FocusEventWidget(Widget):
   signals = ['focusgain', 'focuslost'] # will be used by the metaclass of Widget to call register_signal
   _has_focus = False
   @property
@@ -28,7 +27,7 @@ class FocusEventWidget(urwid.Widget):
     Return True if there is no callback, or if all callback answer True
     """
     result = True
-    signal_obj = urwid.signals._signals
+    signal_obj = signals._signals
     d = getattr(self, signal_obj._signal_attr, {})
     for callback, user_arg in d.get(name, []):
       args_copy = (self,) + args
@@ -133,9 +132,9 @@ class SensitiveWidgetBehavior(object):
   sensitive = property(get_sensitive, set_sensitive)
   def selectable(self):
     return self.get_sensitive()
-  def render_with_attr(self, canvas, focus = False):
+  def canvas_with_attr(self, canvas, focus = False):
     """ Taken from AttrMap """
-    new_canvas = urwid.CompositeCanvas(canvas)
+    new_canvas = CompositeCanvas(canvas)
     if self.sensitive:
       attr_tuple = self._sensitive_attr
     else:
@@ -156,39 +155,47 @@ class More(FocusEventWidget, SensitiveWidgetBehavior):
   """
   def __init__(self, sensitive = True):
     SensitiveWidgetBehavior.__init__(self, sensitive)
+
+class TextMore(More, Text):
+  _default_sensitive_attr = ('body', 'body')
+  def __init__(self, markup, align = LEFT, wrap = SPACE, layout = None):
+    More.__init__(self, False)
+    Text.__init__(self, markup, align, wrap, layout)
   def render(self, size, focus = False):
-    for cls in self.__class__.__bases__:
-      if cls != More and hasattr(cls, 'render') and callable(cls.render) and cls.render != More.render: # skip me
-        canvas = cls.render(self, size, focus)
-        if canvas:
-          return self.render_with_attr(canvas, focus)
-        else:
-          return canvas
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class EditMore(More, urwid.Edit):
+class EditMore(More, Edit):
   _default_sensitive_attr = ('focusable', 'focus_edit')
-  def __init__(self, caption = u"", edit_text = u"", multiline = False, align = urwid.LEFT, wrap = urwid.SPACE, allow_tab = False, edit_pos = None, layout = None, mask = None):
+  def __init__(self, caption = u"", edit_text = u"", multiline = False, align = LEFT, wrap = SPACE, allow_tab = False, edit_pos = None, layout = None, mask = None):
     More.__init__(self)
-    urwid.Edit.__init__(self, caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
+    Edit.__init__(self, caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class IntEditMore(More, urwid.IntEdit):
+class IntEditMore(More, IntEdit):
   _default_sensitive_attr = ('focusable', 'focus_edit')
   def __init__(self, caption = "", default = None):
     More.__init__(self)
-    urwid.IntEdit.__init__(self, caption, default)
+    IntEdit.__init__(self, caption, default)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class SelectableIconMore(More, urwid.SelectableIcon):
+class SelectableIconMore(More, SelectableIcon):
   _default_sensitive_attr = ('focusable', 'focus_icon')
   def __init__(self, text, cursor_position = 1):
     More.__init__(self)
-    urwid.SelectableIcon.__init__(self, text, cursor_position)
+    SelectableIcon.__init__(self, text, cursor_position)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class ButtonMore(More, urwid.Button):
+class ButtonMore(More, Button):
   def __init__(self, label, on_press = None, user_data = None):
     More.__init__(self)
-    urwid.Button.__init__(self, label, on_press, user_data)
+    Button.__init__(self, label, on_press, user_data)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class CheckBoxMore(More, urwid.CheckBox):
+class CheckBoxMore(More, CheckBox):
   _default_sensitive_attr = ('focusable', 'focus_radio')
   states = {
     True: SelectableIconMore(u"[X]"),
@@ -196,9 +203,11 @@ class CheckBoxMore(More, urwid.CheckBox):
     'mixed': SelectableIconMore(u"[#]") }
   def __init__(self, label, state = False, has_mixed = False, on_state_change = None, user_data = None):
     More.__init__(self)
-    urwid.CheckBox.__init__(self, label, state, has_mixed, on_state_change, user_data)
+    CheckBox.__init__(self, label, state, has_mixed, on_state_change, user_data)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class RadioButtonMore(More, urwid.RadioButton):
+class RadioButtonMore(More, RadioButton):
   _default_sensitive_attr = ('focusable', 'focus_radio')
   states = {
     True: SelectableIconMore(u"(X)"),
@@ -206,15 +215,19 @@ class RadioButtonMore(More, urwid.RadioButton):
     'mixed': SelectableIconMore(u"(#)") }
   def __init__(self, group, label, state = "first True", on_state_change = None, user_data = None):
     More.__init__(self)
-    urwid.RadioButton.__init__(self, group, label, state, on_state_change, user_data)
+    RadioButton.__init__(self, group, label, state, on_state_change, user_data)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class WidgetWrapMore(More, urwid.WidgetWrap):
+class WidgetWrapMore(More, WidgetWrap):
   def __init__(self, w):
     More.__init__(self)
     self._wrapped_widget = w
-  def render(self, size, focus = False):
+  def _render_with_attr(self, size, focus = False):
     canvas = self._w.render(size, focus = focus)
-    return self.render_with_attr(urwid.CompositeCanvas(canvas), focus)
+    return self.canvas_with_attr(CompositeCanvas(canvas), focus)
+  def render(self, size, focus = False):
+    return self._render_with_attr(size, focus)
   def _can_gain_focus(self):
     if isinstance(self._w, FocusEventWidget):
       return self._w._can_gain_focus()
@@ -230,10 +243,15 @@ class WidgetWrapMore(More, urwid.WidgetWrap):
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self._w)
 
-class WidgetDecorationMore(More, urwid.WidgetDecoration):
+class WidgetDecorationMore(More, WidgetDecoration):
   def __init__(self, original_widget):
     More.__init__(self)
-    urwid.WidgetDecoration.__init__(self, original_widget)
+    WidgetDecoration.__init__(self, original_widget)
+  def _render_with_attr(self, size, focus = False):
+    canvas = self._original_widget.render(size, focus = focus)
+    return self.canvas_with_attr(CompositeCanvas(canvas), focus)
+  def render(self, size, focus = False):
+    return self._render_with_attr(size, focus)
   def _can_gain_focus(self):
     if isinstance(self._original_widget, FocusEventWidget):
       return self._original_widget._can_gain_focus()
@@ -249,57 +267,69 @@ class WidgetDecorationMore(More, urwid.WidgetDecoration):
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self._original_widget)
 
-class WidgetPlaceholderMore(WidgetDecorationMore, urwid.WidgetPlaceholder):
+class WidgetPlaceholderMore(WidgetDecorationMore, WidgetPlaceholder):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, original_widget):
     WidgetDecorationMore.__init__(self, original_widget)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
 
-class AttrMapMore(WidgetDecorationMore, urwid.AttrMap):
+class AttrMapMore(WidgetDecorationMore, AttrMap):
   def __init__(self, w, attr_map, focus_map = None):
     WidgetDecorationMore.__init__(self, w)
-    urwid.AttrMap.__init__(self, w, attr_map, focus_map)
+    AttrMap.__init__(self, w, attr_map, focus_map)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(AttrMap.render(self, size, focus), focus)
 
-class AttrWrapMore(WidgetDecorationMore, urwid.AttrWrap):
+class AttrWrapMore(WidgetDecorationMore, AttrWrap):
   def __init__(self, w, attr, focus_attr = None):
     WidgetDecorationMore.__init__(self, w)
-    urwid.AttrWrap.__init__(self, w, attr, focus_attr)
+    AttrWrap.__init__(self, w, attr, focus_attr)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(AttrWrap.render(self, size, focus), focus)
 
-class PaddingMore(WidgetDecorationMore, urwid.Padding):
+class PaddingMore(WidgetDecorationMore, Padding):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
-  def __init__(self, w, align = urwid.LEFT, width = urwid.PACK, min_width = None, left = 0, right = 0):
+  def __init__(self, w, align = LEFT, width = PACK, min_width = None, left = 0, right = 0):
     WidgetDecorationMore.__init__(self, w)
-    urwid.Padding.__init__(self, w, align, width, min_width, left, right)
+    Padding.__init__(self, w, align, width, min_width, left, right)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(Padding.render(self, size, focus), focus)
 
-class FillerMore(WidgetDecorationMore, urwid.Filler):
+class FillerMore(WidgetDecorationMore, Filler):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, body, valign = "middle", height = None, min_height = None):
     WidgetDecorationMore.__init__(self, body)
-    urwid.Filler.__init__(self, body, valign, height, min_height)
+    Filler.__init__(self, body, valign, height, min_height)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(Filler.render(self, size, focus), focus)
 
-class BoxAdapterMore(WidgetDecorationMore, urwid.BoxAdapter):
+class BoxAdapterMore(WidgetDecorationMore, BoxAdapter):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, box_widget, height):
     WidgetDecorationMore.__init__(self, box_widget)
-    urwid.BoxAdapter.__init__(self, box_widget, height)
+    BoxAdapter.__init__(self, box_widget, height)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(BoxAdapter.render(self, size, focus), focus)
 
-class WidgetContainerMore(More, urwid.WidgetContainer):
+class WidgetContainerMore(More, WidgetContainer):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, widget_list):
     More.__init__(self)
-    urwid.WidgetContainer.__init__(self, widget_list)
+    WidgetContainer.__init__(self, widget_list)
 
-class FrameMore(More, urwid.Frame):
+class FrameMore(More, Frame):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   _filler_widget_class = FillerMore
   def __init__(self, body, header = None, footer = None, focus_part = 'body'):
     More.__init__(self)
-    urwid.Frame.__init__(self, body, header, footer, focus_part)
+    Frame.__init__(self, body, header, footer, focus_part)
   def render(self, size, focus = False):
     """Render frame and return it."""
     (maxcol, maxrow) = size
@@ -329,8 +359,8 @@ class FrameMore(More, urwid.Frame):
     if foot:
       combinelist.append((foot, 'footer', self.focus_part == 'footer'))
       depends_on.append(self.footer)
-    return self.render_with_attr(urwid.CanvasCombine(combinelist), focus)
-    #return urwid.CanvasCombine(combinelist)
+    return self.canvas_with_attr(CanvasCombine(combinelist), focus)
+    #return CanvasCombine(combinelist)
   def _get_focus_widget(self, part):
     assert part in ('header', 'footer', 'body')
     if part == 'header':
@@ -356,18 +386,18 @@ class FrameMore(More, urwid.Frame):
         if isinstance(focus_w, FocusEventWidget):
           ok = focus_w.gain_focus()
     if ok:
-      urwid.Frame.set_focus(self, part)
+      Frame.set_focus(self, part)
   def gain_focus(self):
     return self._gain_focus_with_subwidget(self._get_focus_widget(self.get_focus()))
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self._get_focus_widget(self.get_focus()))
 
-class PileMore(More, urwid.Pile):
+class PileMore(More, Pile):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, widget_list, focus_item = None):
     More.__init__(self)
-    urwid.Pile.__init__(self, widget_list, focus_item)
+    Pile.__init__(self, widget_list, focus_item)
   def keypress(self, size, key):
     """
     Pass the keypress to the widget in focus.
@@ -420,7 +450,7 @@ class PileMore(More, urwid.Pile):
     """
     ok = True
     if not hasattr(self, "focus_item"):
-      urwid.Pile.set_focus(self, item)
+      Pile.set_focus(self, item)
     if self.has_focus:
       focus_w = self.get_focus()
       if type(item) == int:
@@ -434,18 +464,20 @@ class PileMore(More, urwid.Pile):
           if isinstance(new_focus_w, FocusEventWidget):
             ok = new_focus_w.gain_focus()
     if ok:
-      urwid.Pile.set_focus(self, item)
+      Pile.set_focus(self, item)
   def gain_focus(self):
     return self._gain_focus_with_subwidget(self.get_focus())
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self.get_focus())
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus), focus)
 
-class ColumnsMore(More, urwid.Columns):
+class ColumnsMore(More, Columns):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, widget_list, dividechars = 0, focus_column = None, min_width = 1, box_columns = None):
     More.__init__(self)
-    urwid.Columns.__init__(self, widget_list, dividechars, focus_column, min_width, box_columns)
+    Columns.__init__(self, widget_list, dividechars, focus_column, min_width, box_columns)
   def set_focus_column(self, num):
     """Set the column in focus by its index in self.widget_list."""
     ok = True
@@ -459,7 +491,7 @@ class ColumnsMore(More, urwid.Columns):
         if isinstance(focus_w, FocusEventWidget):
           ok = focus_w.gain_focus()
     if ok:
-      urwid.Columns.set_focus_column(self, num)
+      Columns.set_focus_column(self, num)
   def set_focus(self, item):
     """Set the item in focus. item -- widget or integer index"""
     if type(item) == int:
@@ -498,7 +530,7 @@ class ColumnsMore(More, urwid.Columns):
         continue
       focus = focus and self.focus_col == i
       ok = True
-      if urwid.util.is_mouse_press(event) and button == 1:
+      if util.is_mouse_press(event) and button == 1:
         if w.selectable():
           ok = self.set_focus(w)
       if not ok or not hasattr(w,'mouse_event'):
@@ -509,8 +541,10 @@ class ColumnsMore(More, urwid.Columns):
     return self._gain_focus_with_subwidget(self.get_focus())
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self.get_focus())
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus), focus)
 
-class GridFlowMore(More, urwid.GridFlow):
+class GridFlowMore(More, GridFlow):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   _column_widget_class = ColumnsMore
@@ -518,14 +552,14 @@ class GridFlowMore(More, urwid.GridFlow):
   _pile_widget_class = PileMore
   def __init__(self, cells, cell_width, h_sep, v_sep, align):
     More.__init__(self)
-    urwid.GridFlow.__init__(self, cells, cell_width, h_sep, v_sep, align)
+    GridFlow.__init__(self, cells, cell_width, h_sep, v_sep, align)
   def generate_display_widget(self, size):
     """
     Actually generate display widget (ignoring cache)
     Copied from original GridFlow but with custom sub-widgets.
     """
     (maxcol,) = size
-    d = urwid.Divider() # don't customize Divider, it's really a basic class.
+    d = Divider() # don't customize Divider, it's really a basic class.
     if len(self.cells) == 0: # how dull
       return d
     if self.v_sep > 1:
@@ -587,29 +621,33 @@ class GridFlowMore(More, urwid.GridFlow):
         if isinstance(focus_w, FocusEventWidget):
           ok = focus_w.gain_focus()
     if ok:
-      urwid.GridFlow.set_focus(self, cell)
+      GridFlow.set_focus(self, cell)
   def gain_focus(self):
     return self._gain_focus_with_subwidget(self.get_focus())
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self.get_focus())
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus), focus)
 
-class OverlayMore(More, urwid.Overlay):
+class OverlayMore(More, Overlay):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, top_w, bottom_w, align, width, valign, height, min_width = None, min_height = None):
     More.__init__(self)
-    urwid.Overlay.__init__(self, top_w, bottom_w, align, width, valign, height, min_width, min_height)
+    Overlay.__init__(self, top_w, bottom_w, align, width, valign, height, min_width, min_height)
   def gain_focus(self):
     return self._gain_focus_with_subwidget(self.top_w)
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self.top_w)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus), focus)
 
-class ListBoxMore(More, urwid.ListBox):
+class ListBoxMore(More, ListBox):
   _default_sensitive_attr = 'body'
   _default_unsensitive_attr = 'body'
   def __init__(self, body):
     More.__init__(self)
-    urwid.ListBox.__init__(self, body)
+    ListBox.__init__(self, body)
   def change_focus(self, size, position, offset_inset = 0, coming_from = None, cursor_coords = None, snap_rows = None):
     old_widget, old_focus_pos = self.body.get_focus()
     new_focus_pos = position
@@ -621,7 +659,7 @@ class ListBoxMore(More, urwid.ListBox):
     if ok and isinstance(new_widget, FocusEventWidget):
       ok = new_widget.gain_focus()
     if ok:
-      urwid.ListBox.change_focus(self, size, position, offset_inset, coming_from, cursor_coords, snap_rows)
+      ListBox.change_focus(self, size, position, offset_inset, coming_from, cursor_coords, snap_rows)
     return ok
   def mouse_event(self, size, event, button, col, row, focus):
     """
@@ -646,7 +684,7 @@ class ListBoxMore(More, urwid.ListBox):
       return False
     focus = focus and w == focus_widget
     ok = True
-    if urwid.util.is_mouse_press(event) and button == 1:
+    if util.is_mouse_press(event) and button == 1:
       if w.selectable():
         ok = self.change_focus((maxcol,maxrow), w_pos, wrow)
     if not ok or not hasattr(w,'mouse_event'):
@@ -656,15 +694,17 @@ class ListBoxMore(More, urwid.ListBox):
     return self._gain_focus_with_subwidget(self.get_focus()[0])
   def loose_focus(self):
     return self._loose_focus_with_subwidget(self.get_focus()[0])
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(self.__super.render(size, focus), focus)
 
-class LineBoxMore(WidgetDecorationMore, urwid.LineBox):
+class LineBoxMore(WidgetDecorationMore, LineBox):
   def __init__(self, original_widget, title = "", tlcorner = u'┌', tline = u'─', lline = u'│', trcorner = u'┐', blcorner = u'└', rline = u'│', bline = u'─', brcorner = u'┘'):
-    """See urwid.LineBox"""
-    tline, bline = urwid.Divider(tline), urwid.Divider(bline)
-    lline, rline = urwid.SolidFill(lline), urwid.SolidFill(rline)
-    tlcorner, trcorner = urwid.Text(tlcorner), urwid.Text(trcorner)
-    blcorner, brcorner = urwid.Text(blcorner), urwid.Text(brcorner)
-    self.title_widget = urwid.Text(self.format_title(title))
+    """See LineBox"""
+    tline, bline = Divider(tline), Divider(bline)
+    lline, rline = SolidFill(lline), SolidFill(rline)
+    tlcorner, trcorner = Text(tlcorner), Text(trcorner)
+    blcorner, brcorner = Text(blcorner), Text(brcorner)
+    self.title_widget = Text(self.format_title(title))
     self.tline_widget = ColumnsMore([
       tline,
       ('flow', self.title_widget),
@@ -685,19 +725,32 @@ class LineBoxMore(WidgetDecorationMore, urwid.LineBox):
     ])
     pile = PileMore([('flow', top), middle, ('flow', bottom)], focus_item = 1)
     WidgetDecorationMore.__init__(self, original_widget)
-    urwid.WidgetWrap.__init__(self, pile)
+    WidgetWrap.__init__(self, pile)
+  def render(self, size, focus = False):
+    return self.canvas_with_attr(LineBox.render(self, size, focus), focus)
 
-class SelText(More, urwid.Text):
-  """A selectable text widget. See urwid.Text."""
+class PopUpLauncherMore(WidgetDecorationMore, PopUpLauncher):
+  def __init__(self, original_widget):
+    WidgetDecorationMore.__init__(self, original_widget)
+    self._pop_up_widget = None
+  def render(self, size, focus = False):
+    canv = WidgetDecorationMore.render(self, size, focus)
+    if self._pop_up_widget:
+      canv = CompositeCanvas(canv)
+      canv.set_pop_up(self._pop_up_widget, **self.get_pop_up_parameters())
+    return canv
+
+class SelText(TextMore):
+  """A selectable text widget. See Text and TextMore."""
   _default_sensitive_attr = ('focusable', 'focus_edit')
-  def __init__(self, markup, align = urwid.LEFT, wrap = urwid.SPACE, layout = None):
-    More.__init__(self)
-    urwid.Text.__init__(self, markup, align, wrap, layout)
+  def __init__(self, markup, align = LEFT, wrap = SPACE, layout = None):
+    self.__super.__init__(markup, align, wrap, layout)
+    self.set_sensitive(True)
   def keypress(self, size, key):
     """Don't handle any keys."""
     return key
 
-class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
+class ComboBox(PopUpLauncherMore):
   """A ComboBox of text objects"""
   class ComboSpace(WidgetWrapMore):
     """The actual menu-like space that comes down from the ComboBox"""
@@ -709,18 +762,18 @@ class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
       """
       normal_attr = item_attrs[0]
       focus_attr = item_attrs[1]
-      sepLeft = AttrMapMore(urwid.SolidFill(u"│"), normal_attr)
-      sepRight = AttrMapMore(urwid.SolidFill(u"│"), normal_attr)
-      sepBottomLeft = AttrMapMore(urwid.Text(u"└"), normal_attr)
-      sepBottomRight = AttrMapMore(urwid.Text(u"┘"), normal_attr)
-      sepBottomCenter = AttrMapMore(urwid.Divider(u"─"), normal_attr)
+      sepLeft = AttrMapMore(SolidFill(u"│"), normal_attr)
+      sepRight = AttrMapMore(SolidFill(u"│"), normal_attr)
+      sepBottomLeft = AttrMapMore(Text(u"└"), normal_attr)
+      sepBottomRight = AttrMapMore(Text(u"┘"), normal_attr)
+      sepBottomCenter = AttrMapMore(Divider(u"─"), normal_attr)
       self._content = []
       for item in items:
-        if isinstance(item, urwid.Widget):
+        if isinstance(item, Widget):
           if item.selectable and hasattr(item, "text") and hasattr(item, "attr"): # duck typing
             self._content.append(item)
           else:
-            raise ValueError, "items in ComboBoxMore should be strings or selectable widget with a text and attr properties"
+            raise ValueError, "items in ComboBox should be strings or selectable widget with a text and attr properties"
         else:
           self._content.append(SelText(item))
       self._listw = PileMore(self._content)
@@ -728,11 +781,12 @@ class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
         show_first = 0
       self.set_selected_pos(show_first)
       columns = ColumnsMore([
-        ('fixed', 1, PileMore([urwid.BoxAdapter(sepLeft, len(items)), sepBottomLeft])),
+        ('fixed', 1, PileMore([BoxAdapter(sepLeft, len(items)), sepBottomLeft])),
         PileMore([self._listw, sepBottomCenter]),
-        ('fixed', 1, PileMore([urwid.BoxAdapter(sepRight, len(items)), sepBottomRight])),
+        ('fixed', 1, PileMore([BoxAdapter(sepRight, len(items)), sepBottomRight])),
       ])
-      filler = FillerMore(columns)
+      filler = Filler(columns)
+      self.__super.__init__(filler)
       self.__super.__init__(filler)
       self._deco = [sepLeft, sepRight, sepBottomLeft, sepBottomRight, sepBottomCenter, self._listw]
       self.set_item_attrs(item_attrs)
@@ -790,49 +844,46 @@ class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
   _default_sensitive_attr = ('body', '')
   _default_unsensitive_attr = ('body', '')
   DOWN_ARROW = u"↓"
-  signals = ['displaycombo']
+  signals = ['displaycombo', 'change']
   
-  def __init__(self, label = u'', items = None, use_enter = True, focus = 0, callback = None, user_args = None):
+  def __init__(self, label = u'', items = None, use_enter = True, focus_index = 0):
     """
-    label     : bit of text that preceeds the combobox.  If it is "", then ignore it
-    items     : stuff to include in the combobox
-    use_enter : does enter trigger the combo list
-    focus     : index of the element in the list to pick first
-    callback  : function that takes (combobox, sel_index, user_args = None)
-    user_args : user_args in the callback
+    label       : bit of text that preceeds the combobox.  If it is "", then ignore it
+    items       : stuff to include in the combobox
+    use_enter   : does enter trigger the combo list
+    focus_index : index of the element in the list to pick first
     """
-    self.label = urwid.Text(label)
+    self.label = Text(label)
     if items is None:
       items = []
-    self.set_list(items)
     self.cbox = self._create_cbox_widget()
     if label:
       w = ColumnsMore(
         [
           ('fixed', len(label), self.label),
-          self.cbox,
-          ('fixed', len(self.DOWN_ARROW), urwid.Text(self.DOWN_ARROW))
+          ('fixed', 1, self.cbox),
+          ('fixed', len(self.DOWN_ARROW), Text(self.DOWN_ARROW))
         ], dividechars = 1)
     else:
       w = ColumnsMore(
         [
-          self.cbox,
-          ('fixed', len(self.DOWN_ARROW), urwid.Text(self.DOWN_ARROW))
+          ('fixed', 1, self.cbox),
+          ('fixed', len(self.DOWN_ARROW), Text(self.DOWN_ARROW))
         ], dividechars = 1)
     self.__super.__init__(w)
     self.combo_attrs = ('comboitem', 'comboitem_focus')
     self.use_enter = use_enter
-    self.set_selected_item(focus)
+    self.set_list(items)
+    self.set_selected_item(focus_index)
     self._overlay_left = 0
     self._overlay_width = len(self.DOWN_ARROW)
     self._overlay_height = len(items)
-    self.callback = callback
-    self.user_args = user_args
-    urwid.connect_signal(self, 'displaycombo', self.displaycombo)
+    connect_signal(self, 'displaycombo', self.displaycombo)
   def _create_cbox_widget(self):
     return SelText(u'')
   def _set_cbox_text(self, text):
     ok = False
+    self.cbox._fromCombo = True # add a property to say that we set the text from the combo
     if not ok and hasattr(self.cbox, "set_text"):
       try:
         self.cbox.set_text(text)
@@ -845,6 +896,7 @@ class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
         ok = True
       except:
         pass
+    self.cbox._fromCombo = False
     if not ok:
       raise Exception, "Do not know how to set the text in the widget {0}".format(self.cbox)
   def _item_text(self, item):
@@ -880,9 +932,14 @@ class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
     return self._list
   def set_list(self, items):
     self._list = items
+    maxw = reduce(max, [len(self._item_text(item)) for item in self._list], 0) + 1
+    zonepos = 0
+    if self.label.text:
+      zonepos = 1
+    self._original_widget.column_types[zonepos] = ('fixed', maxw)
   list = property(get_list, set_list)
   def set_combo_attrs(self, normal_attr, focus_attr):
-    self.combo_attrs = item_attrs
+    self.combo_attrs = (normal_attr, focus_attr)
   def keypress(self, size, key):
     """
     If we press space or enter, be a combo box!
@@ -898,27 +955,40 @@ class ComboBoxMore(urwid.PopUpLauncher, WidgetWrapMore):
     popup = self.ComboSpace(self.list, index, self.combo_attrs)
     self._overlay_left = 0
     if self.label.text:
-      self._overlay_left = len(self.label.text) + 1
+      self._overlay_left = len(self.label.text)
     (self._overlay_width, self._overlay_height) = popup.get_size()
-    urwid.connect_signal(popup, 'close', lambda x: self.close_pop_up())
-    urwid.connect_signal(popup, 'validate', self.validate_pop_up)
+    connect_signal(popup, 'close', lambda x: self.close_pop_up())
+    connect_signal(popup, 'validate', self.validate_pop_up)
     return popup
   def get_pop_up_parameters(self):
     return {'left':self._overlay_left, 'top':1, 'overlay_width':self._overlay_width, 'overlay_height':self._overlay_height}
   def validate_pop_up(self, popup):
     pos = self._pop_up_widget.selected_pos
+    text = self._item_text(self.list[pos])
     self.close_pop_up()
-    if self.callback:
-      self.callback(self, pos, self.user_args)
-    self.set_selected_item(pos)
+    if self._emit_change_event(text, pos):
+      self.set_selected_item(pos)
+  def _emit_change_event(self, pos, text):
+    """
+    Return True if there is no callback, or if all callback answer True
+    """
+    result = True
+    signal_obj = signals._signals
+    d = getattr(self, signal_obj._signal_attr, {})
+    for callback, user_arg in d.get('change', []):
+      args = (self, pos, text)
+      result &= bool(callback(*args))
+    return result
 
-class ComboBoxEditMore(ComboBoxMore):
+class ComboBoxEdit(ComboBox):
   """
   A ComboBox with an editable zone.
   The combo trigger on 'enter' only, disregarding the state for self.use_enter
   """
   def _create_cbox_widget(self):
-    return EditMore(edit_text = u'')
+    edit = EditMore(edit_text = u'', wrap = CLIP)
+    connect_signal(edit, 'change', self._on_edit_change)
+    return edit
   def keypress(self, size, key):
     """
     If we press enter, be a combo box!
@@ -927,6 +997,12 @@ class ComboBoxEditMore(ComboBoxMore):
       self._emit("displaycombo")
     else:
       return self._original_widget.keypress(size, key)
+  def _on_edit_change(self, edit, text):
+    # prevent re-emit the change when this event has been triggered by the combo
+    if hasattr(edit, '_fromCombo') and not edit._fromCombo:
+      # we cannot prevent the edit widget from being modified, even if the combo event handlers says so
+      # so just notify about the change
+      self._emit_change_event(text, None)
 
 # This is a h4x3d copy of some of the code in Ian Ward's dialog.py example.
 class DialogExit(Exception):
@@ -946,12 +1022,12 @@ class Dialog2(WidgetWrapMore):
     self.body = body
     if body is None:
       # fill space with nothing
-      body = FillerMore(urwid.Divider(), 'top')
+      body = FillerMore(Divider(), 'top')
     self.frame = FrameMore(body, focus_part = 'footer')
     if text is not None:
       self.frame.header = PileMore([
-        urwid.Text(text, align='right'),
-        urwid.Divider()
+        Text(text, align='right'),
+        Divider()
       ])
     w = AttrWrapMore(self.frame, 'body')
     self.__super.__init__(w)
@@ -969,7 +1045,7 @@ class Dialog2(WidgetWrapMore):
     maxlen += 4  # because of '< ... >'
     self.buttons = GridFlowMore(l, maxlen, 3, 1, 'center')
     self.frame.footer = PileMore([
-      urwid.Divider(),
+      Divider(),
       self.buttons
     ], focus_item = 1)
   def button_press(self, button):
@@ -992,7 +1068,7 @@ class Dialog2(WidgetWrapMore):
         while not keys:
           keys = ui.get_input()
         for k in keys:
-          if urwid.util.is_mouse_event(k):
+          if util.is_mouse_event(k):
             event, button, col, row = k
             overlay.mouse_event(size, event, button, col, row, focus = True)
           else:
@@ -1016,8 +1092,8 @@ class TextDialog(Dialog2):
   """ Simple dialog with text and "OK" button. """
   def __init__(self, text, height, width, header=None, align='left',
     buttons=(_(u'OK'), 1)):
-    l = [urwid.Text(text)]
-    body = ListBoxMore(urwid.SimpleListWalker(l))
+    l = [Text(text)]
+    body = ListBoxMore(SimpleListWalker(l))
     body = AttrWrapMore(body, 'body')
     Dialog2.__init__(self, header, height + 2, width + 2, body)
     if type(buttons) == list:
@@ -1035,7 +1111,7 @@ class InputDialog(Dialog2):
   """ Simple dialog with text and entry. """
   def __init__(self, text, height, width, ok_name=_(u'OK'), edit_text=''):
     self.edit = EditMore(wrap='clip', edit_text=edit_text)
-    body = ListBoxMore(urwid.SimpleListWalker([self.edit]))
+    body = ListBoxMore(SimpleListWalker([self.edit]))
     body = AttrWrapMore(body, 'editbx', 'editfc')
     Dialog2.__init__(self, text, height, width, body)
     self.frame.set_focus('body')
@@ -1063,8 +1139,8 @@ class ClickCols(WidgetWrapMore):
     self.keys = keys
 
   def mouse_event(self, size, event, button, x, y, focus):
-    if event == "mouse press":
-      self.callback(self.keys) # possible keys
+    if event == "mouse press" and self.keys and len(self.keys):
+      self.callback(self.keys[0]) # the first key is used
 
 class OptCols(WidgetWrapMore):
   """ Htop-style menubar on the bottom of the screen. """
@@ -1100,7 +1176,7 @@ class OptCols(WidgetWrapMore):
         newKeys[key] = newkey
       desc = cmd[1]
       keyText = u" / ".join([newKeys[key] for key in keys]) + ":"
-      col = ClickCols([('fixed', len(keyText) + 1, urwid.Text((attrs[0], keyText))), urwid.Text((attrs[1], desc))], handler, keys)
+      col = ClickCols([('fixed', len(keyText) + 1, Text((attrs[0], keyText))), Text((attrs[1], desc))], handler, keys)
       textList.append(col)
     cols = ColumnsMore(textList)
     WidgetWrapMore.__init__(self, cols)

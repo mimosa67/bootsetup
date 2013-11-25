@@ -9,7 +9,6 @@ __license__ = 'GPL2+'
 
 import gettext
 import gobject
-import urwid
 import urwid_more as urwidm
 import re
 import math
@@ -38,14 +37,14 @@ class GatherCurses:
       ('focus_edit', 'yellow', 'black'),
       ('focus_icon', 'yellow', 'black'),
       ('focus_radio', 'yellow', 'black'),
-      ('combobody', 'black', 'light gray'),
-      ('combofocus', 'black', 'light green'),
+      ('focus_combo', 'black', 'light green'),
+      ('combobody', 'light gray', 'dark gray'),
+      ('combofocus', 'black', 'yellow'),
       ('error', 'white', 'light red'),
       ('focus_error', 'light red', 'black'),
     ]
   _view = None
   _loop = None
-  _comboBoxes = [] # hack for ComboBox
   _labelPerDevice = {}
   _lilo = None
   _grub2 = None
@@ -65,18 +64,14 @@ disks:{disks}
 partitions:{partitions}
 boot partitions:{boot_partitions}
 """.format(bootloader = self.cfg.cur_bootloader, partition = self.cfg.cur_boot_partition, mbr = self.cfg.cur_mbr_device, disks = "\n - " + "\n - ".join(map(" ".join, self.cfg.disks)), partitions = "\n - " + "\n - ".join(map(" ".join, self.cfg.partitions)), boot_partitions = "\n - " + "\n - ".join(map(" ".join, self.cfg.boot_partitions)))
-    self.ui = urwid.raw_display.Screen()
+    self.ui = urwidm.raw_display.Screen()
     self.ui.set_mouse_tracking()
     self._palette.extend(bootsetup._palette)
   
   def run(self):
     self._createView()
     self._changeBootloaderSection()
-    self._loop = urwid.MainLoop(self._view, self._palette, handle_mouse = True, unhandled_input = self._handleKeys)
-    # hack for ComboBox
-    for c in self._comboBoxes:
-      c.build_combobox(self._view, self._loop.screen, c.displayRows)
-      c.set_combo_attrs('combobody', 'combofocus')
+    self._loop = urwidm.MainLoop(self._view, self._palette, handle_mouse = True, unhandled_input = self._handleKeys, pop_ups = True)
     if self.cfg.cur_bootloader == 'lilo':
       self._radioLiLo.set_state(True)
     elif self.cfg.cur_bootloader == 'grub2':
@@ -89,13 +84,16 @@ boot partitions:{boot_partitions}
   def _errorDialog(self, message):
     self._bootsetup.error_dialog(message, parent = self._view)
 
-  def _hackComboBox(self, comboBox, position = 10):
-    comboBox.displayRows = position
-    if self._loop and self._loop.screen.started:
-      comboBox.build_combobox(self._view, self._loop.screen, comboBox.displayRows)
-      comboBox.set_combo_attrs('combobody', 'combofocus')
-    else:
-      self._comboBoxes.append(comboBox)
+  def _createComboBox(self, label, list):
+    comboBox = urwidm.ComboBox(label, list)
+    comboBox.set_combo_attrs('combobody', 'combofocus')
+    comboBox.cbox.sensitive_attr = ('focusable', 'focus_combo')
+    return comboBox
+  
+  def _createComboBoxEdit(self, label, list):
+    comboBox = urwidm.ComboBoxEdit(label, list)
+    comboBox.set_combo_attrs('combobody', 'combofocus')
+    comboBox.cbox.sensitive_attr = ('focusable', 'focus_edit')
     return comboBox
 
   def _createEdit(self, caption = u'', edit_text = u'', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None):
@@ -116,7 +114,7 @@ boot partitions:{boot_partitions}
       if not hasattr(button, 'get_label') and hasattr(button, 'original_widget'):
         button = button.original_widget
       maxLen = max(maxLen, len(button.get_label()))
-    return urwid.GridFlow(buttons, cell_width = maxLen + len('<  >'), h_sep = h_sep, v_sep = v_sep, align = "center")
+    return urwidm.GridFlow(buttons, cell_width = maxLen + len('<  >'), h_sep = h_sep, v_sep = v_sep, align = "center")
 
   def _createView(self):
     """
@@ -140,8 +138,8 @@ boot partitions:{boot_partitions}
 +=======================================+
     """
     # header
-    txtTitle = urwid.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
-    header = urwidm.PileMore([urwid.Divider(), txtTitle, urwid.Text('─' * (len(txtTitle.text) + 2), align = "center")])
+    txtTitle = urwidm.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
+    header = urwidm.PileMore([urwidm.Divider(), txtTitle, urwidm.Text('─' * (len(txtTitle.text) + 2), align = "center")])
     header.attr = 'header'
     # footer
     keys = [
@@ -150,7 +148,6 @@ boot partitions:{boot_partitions}
         (('q', 'f10'), _("Quit")),
       ]
     keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
-    #keysColumns = urwid.Text("footer")
     footer = urwidm.AttrMapMore(keysColumns, 'footer')
     # intro
     introHtml = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
@@ -159,9 +156,9 @@ A bootloader is required to load the main operating system of a computer and wil
 a boot menu if several operating systems are available on the same computer.")
     intro = map(lambda line: ('strong', line.replace("<b>", "").replace("</b>", "") + "\n") if line.startswith("<b>") else line, introHtml.split("\n"))
     intro[-1] = intro[-1].strip() # remove last "\n"
-    txtIntro = urwid.Text(intro)
+    txtIntro = urwidm.Text(intro)
     # bootloader type section
-    lblBootloader = urwid.Text(_("Bootloader:"))
+    lblBootloader = urwidm.Text(_("Bootloader:"))
     radioGroupBootloader = []
     self._radioLiLo = self._createRadioButton(radioGroupBootloader, "LiLo", state = False, on_state_change = self._onLiLoChange)
     self._radioGrub2 = self._createRadioButton(radioGroupBootloader, "Grub2", state = False, on_state_change = self._onGrub2Change)
@@ -169,13 +166,13 @@ a boot menu if several operating systems are available on the same computer.")
     # mbr device section
     mbrDeviceSection = self._createMbrDeviceSectionView()
     # bootloader section
-    self._bootloaderSection = urwidm.WidgetPlaceholderMore(urwid.Text(""))
+    self._bootloaderSection = urwidm.WidgetPlaceholderMore(urwidm.Text(""))
     # install section
     btnInstall = self._createButton(_("_Install bootloader").replace("_", ""), on_press = self._onInstall)
     installSection = self._createCenterButtonsWidget([btnInstall])
     # body
-    bodyList = [urwid.Divider(), txtIntro, urwid.Divider('─', bottom = 1), bootloaderTypeSection, mbrDeviceSection, urwid.Divider(), self._bootloaderSection, urwid.Divider('─', top = 1, bottom = 1), installSection]
-    body = urwidm.ListBoxMore(urwid.SimpleListWalker(bodyList))
+    bodyList = [urwidm.Divider(), txtIntro, urwidm.Divider('─', bottom = 1), bootloaderTypeSection, mbrDeviceSection, urwidm.Divider(), self._bootloaderSection, urwidm.Divider('─', top = 1, bottom = 1), installSection]
+    body = urwidm.ListBoxMore(urwidm.SimpleListWalker(bodyList))
     body.attr = 'body'
     frame = urwidm.FrameMore(body, header, footer, focus_part = 'body')
     frame.attr = 'body'
@@ -185,7 +182,7 @@ a boot menu if several operating systems are available on the same computer.")
     comboList = []
     for d in self.cfg.disks:
       comboList.append(" - ".join(d))
-    comboBox = self._hackComboBox(urwidm.ComboBox(_("Install bootloader on:"), comboList))
+    comboBox = self._createComboBoxEdit(_("Install bootloader on:"), comboList)
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -193,24 +190,24 @@ a boot menu if several operating systems are available on the same computer.")
       listDevTitle = _("Partition")
       listFSTitle = _("File system")
       listLabelTitle = _("Boot menu label")
-      listDev = [urwid.Text(listDevTitle)]
-      listFS = [urwid.Text(listFSTitle)]
-      listType = [urwid.Text(_("Operating system"))]
-      listLabel = [urwid.Text(listLabelTitle)]
-      listAction = [urwid.Text("")]
+      listDev = [urwidm.Text(listDevTitle)]
+      listFS = [urwidm.Text(listFSTitle)]
+      listType = [urwidm.Text(_("Operating system"))]
+      listLabel = [urwidm.Text(listLabelTitle)]
+      listAction = [urwidm.Text("")]
       self._labelPerDevice = {}
       for p in self.cfg.boot_partitions:
         dev = p[0]
         fs = p[1]
         ostype = p[3]
         label = re.sub(r'[()]', '', re.sub(r'_\(loader\)', '', re.sub(' ', '_', p[4]))) # lilo does not like spaces and pretty print the label
-        listDev.append(urwid.Text(dev))
-        listFS.append(urwid.Text(fs))
-        listType.append(urwid.Text(ostype))
+        listDev.append(urwidm.Text(dev))
+        listFS.append(urwidm.Text(fs))
+        listType.append(urwidm.Text(ostype))
         self._labelPerDevice[dev] = label
-        editLabel = self._createEdit(edit_text = label, wrap = 'clip')
-        urwid.connect_signal(editLabel, 'change', self._onLabelChange, dev)
-        urwid.connect_signal(editLabel, 'focuslost', self._onLabelFocusLost, dev)
+        editLabel = self._createEdit(edit_text = label, wrap = urwidm.CLIP)
+        urwidm.connect_signal(editLabel, 'change', self._onLabelChange, dev)
+        urwidm.connect_signal(editLabel, 'focuslost', self._onLabelFocusLost, dev)
         listLabel.append(editLabel)
         listAction.append(urwidm.GridFlowMore([self._createButton("↑", on_press = self._moveLineUp, user_data = p[0]), self._createButton("↓", on_press = self._moveLineDown, user_data = p[0])], cell_width = 5, h_sep = 1, v_sep = 1, align = "center"))
       colDev = urwidm.PileMore(listDev)
@@ -228,20 +225,18 @@ a boot menu if several operating systems are available on the same computer.")
       comboList = []
       for p in self.cfg.partitions:
         comboList.append(" - ".join(p))
-      comboBox = self._hackComboBox(urwidm.ComboBox(_("Install Grub2 files on:"), comboList), 12)
+      comboBox = self._createComboBox(_("Install Grub2 files on:"), comboList)
       return comboBox
     else:
-      return urwid.Text("")
+      return urwidm.Text("")
 
   def _changeBootloaderSection(self):
     self._bootloaderSection.original_widget = self._createBootloaderSectionView()
 
-  def _handleKeys(self, keys):
-    for key in keys:
-      key = key.lower()
-      if key in ('q', 'f10'):
+  def _handleKeys(self, key):
+    if not isinstance(key, tuple): # only keyboard input
+      if key.lower() in ('q', 'f10'):
         self.main_quit()
-        break
 
   def _onLiLoChange(self, radioLiLo, newState):
     if newState:
@@ -377,4 +372,4 @@ a boot menu if several operating systems are available on the same computer.")
     if self._grub2:
       del self._grub2
     print "Bye _o/"
-    raise urwid.ExitMainLoop()
+    raise urwidm.ExitMainLoop()
