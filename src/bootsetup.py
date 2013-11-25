@@ -56,7 +56,7 @@ class BootSetup:
     return result_error
 
 def usage():
-  print """BootSetup v{ver}
+  print u"""BootSetup v{ver}
 {copyright}
 {license}
 {author}
@@ -77,7 +77,7 @@ Parameters:
 """.format(ver = __version__, copyright = __copyright__, license = __license__, author = __author__)
 
 def print_err(*args):
-  sys.stderr.write(' '.join(map(str, args)) + "\n")
+  sys.stderr.write((u' '.join(map(unicode, args)) + u"\n").encode('utf-8'))
 
 def die(s, exit = 1):
   print_err(s)
@@ -111,20 +111,20 @@ if __name__ == '__main__':
         use_test_data = True
         print_err("*** Test data mode ***")
       elif arg[0] == '-':
-        die(_("Unrecognized parameter '{0}'.").format(arg))
+        die(_(u"Unrecognized parameter '{0}'.").format(arg))
       else:
         if bootloader is None:
           bootloader = arg
         elif target_partition is None:
           target_partition = arg
         else:
-          die(_("Unrecognized parameter '{0}'.").format(arg))
+          die(_(u"Unrecognized parameter '{0}'.").format(arg))
   if not bootloader or bootloader not in ['lilo', 'grub2', '_']:
-    die(_("bootloader parameter should be lilo, grub2 or '_', given {0}.").format(bootloader))
+    die(_(u"bootloader parameter should be lilo, grub2 or '_', given {0}.").format(bootloader))
   if bootloader == '_':
     bootloader = None
   if target_partition and not os.path.exists(target_partition):
-    die(_("Partition {0} not found.").format(target_partition))
+    die(_(u"Partition {0} not found.").format(target_partition))
   if is_graphic:
     from lib.bootsetup_gtk import *
     bootsetup = BootSetupGtk(__app__, __version__, locale_dir, bootloader, target_partition, is_test, use_test_data)

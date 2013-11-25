@@ -3,6 +3,8 @@
 
 import gettext
 gettext.install('combobox')
+import sys
+sys.path.append('../lib/')
 import urwid_more as urwidm
 
 def pause():

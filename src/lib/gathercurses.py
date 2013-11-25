@@ -33,14 +33,14 @@ class GatherCurses:
       ('strong', 'white', 'black', 'bold'),
       ('focusable', 'light green', 'black'),
       ('unfocusable', 'brown', 'black'),
-      ('focus', 'black', 'light green'),
+      ('focus', 'black', 'dark green'),
       ('focus_edit', 'yellow', 'black'),
       ('focus_icon', 'yellow', 'black'),
       ('focus_radio', 'yellow', 'black'),
-      ('focus_combo', 'black', 'light green'),
-      ('combobody', 'light gray', 'dark gray'),
-      ('combofocus', 'black', 'yellow'),
-      ('error', 'white', 'light red'),
+      ('focus_combo', 'black', 'dark green'),
+      ('combobody', 'light gray', 'dark blue'),
+      ('combofocus', 'black', 'brown'),
+      ('error', 'white', 'dark red'),
       ('focus_error', 'light red', 'black'),
     ]
   _view = None
@@ -182,6 +182,7 @@ a boot menu if several operating systems are available on the same computer.")
 
   def _createMbrDeviceSectionView(self):
     comboBox = self._createComboBoxEdit(_("Install bootloader on:"), self.cfg.disks)
+    urwidm.connect_signal(comboBox, 'change', self._onMBRChange)
     return comboBox
 
   def _createBootloaderSectionView(self):
@@ -222,6 +223,7 @@ a boot menu if several operating systems are available on the same computer.")
       return pile
     elif self.cfg.cur_bootloader == 'grub2':
       comboBox = self._createComboBox(_("Install Grub2 files on:"), self.cfg.partitions)
+      urwidm.connect_signal(comboBox, 'change', self._onGrub2FilesChange)
       return comboBox
     else:
       return urwidm.Text("")
@@ -249,6 +251,10 @@ a boot menu if several operating systems are available on the same computer.")
         self._lilo = None
       self._grub2 = Grub2(self.cfg.is_test)
       self._changeBootloaderSection()
+
+  def _onMBRChange(self, combo, text, pos):
+    self.cfg.cur_mbr_device = text
+    return True
 
   def _isLabelValid(self, label):
     if ' ' in label:
@@ -346,6 +352,10 @@ a boot menu if several operating systems are available on the same computer.")
     if os.path.exists(lilocfg):
       os.remove(lilocfg)
     self._custom_lilo = False
+
+  def _onGrub2FilesChange(self, combo, text, pos):
+    self.cfg.cur_boot_partition = text
+    return True
 
   def _onInstall(self, btnInstall):
     if self.cfg.cur_bootloader == 'lilo':
