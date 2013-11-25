@@ -813,13 +813,22 @@ class ComboBox(PopUpLauncherMore):
         w.attr = item_attrs
     def keypress(self, size, key):
       if key in 'esc':
-        self.set_selected_pos(None)
-        self._emit('close')
+        self.close()
       if key in ('enter', u' '):
-        self.set_selected_item(self._listw.get_focus())
-        self._emit('validate')
+        self.validate()
       else:
         return self.__super.keypress(size, key)
+    def mouse_event(self, size, event, button, col, row, focus):
+      ret = self.__super.mouse_event(size, event, button, col, row, focus)
+      if util.is_mouse_press(event) and button == 1 and col > 1 and col < size[0] - 1 and row < size[1] - 1:
+        self.validate()
+      return ret
+    def close(self):
+      self.set_selected_pos(None)
+      self._emit('close')
+    def validate(self):
+      self.set_selected_item(self._listw.get_focus())
+      self._emit('validate')
     def get_selected_item(self):
       return self._selected_item
     def set_selected_item(self, item):
@@ -948,6 +957,13 @@ class ComboBox(PopUpLauncherMore):
       self._emit("displaycombo")
     else:
       return self._original_widget.keypress(size, key)
+  def mouse_event(self, size, event, button, col, row, focus):
+    maxcol = size[0]
+    maxtxt = len(self.cbox.text) + 1
+    if self.label.text:
+      maxtxt += len(self.label.text) + 1
+    if util.is_mouse_press(event) and button == 1 and col > maxtxt and col <= maxtxt + len(self.DOWN_ARROW):
+      self._emit("displaycombo")
   def displaycombo(self, src):
     self.open_pop_up()
   def create_pop_up(self):

@@ -150,7 +150,8 @@ boot partitions:{boot_partitions}
         (('q', 'f10'), _("Quit")),
       ]
     keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
-    footer = urwidm.AttrMapMore(keysColumns, 'footer')
+    keysColumns.attr = 'footer'
+    footer = urwidm.PileMore([urwidm.Divider(u'⎽'), keysColumns])
     # intro
     introHtml = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
