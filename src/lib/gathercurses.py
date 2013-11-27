@@ -127,7 +127,8 @@ boot partitions:{boot_partitions}
 +---------------------------------------+
 | Bootloader: (×) LiLo (_) Grub2        |
 | MBR Device:  |_____________ ↓|        | <== ComboBox thanks to wicd
-| Grub2 files: |_____________ ↓|        | <== Grub2 only
+| Grub2 files: |_____________ ↓|        | --|
+|           <Edit config>               | --+- <== Grub2 only
 | +-----------------------------------+ | --+
 | |Dev.|FS  |Type |Label      |Actions| |   |
 | |sda1|ext4|Salix|Salix14____|<↑><↓> | |   |
@@ -226,7 +227,9 @@ a boot menu if several operating systems are available on the same computer.")
       comboBox = self._createComboBox(_("Install Grub2 files on:"), self.cfg.partitions)
       urwidm.connect_signal(comboBox, 'change', self._onGrub2FilesChange)
       self._onGrub2FilesChange(comboBox, comboBox.selected_item[0], None)
-      return comboBox
+      btnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editGrub2Conf)
+      pile = urwidm.PileMore([comboBox, self._createCenterButtonsWidget([btnEdit])])
+      return pile
     else:
       return urwidm.Text("")
 
@@ -358,6 +361,9 @@ a boot menu if several operating systems are available on the same computer.")
   def _onGrub2FilesChange(self, combo, text, pos):
     self.cfg.cur_boot_partition = text
     return True
+  
+  def _editGrub2Conf(self, button):
+    pass
 
   def _onInstall(self, btnInstall):
     if self.cfg.cur_bootloader == 'lilo':

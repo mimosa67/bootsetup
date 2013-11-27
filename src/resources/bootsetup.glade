@@ -206,10 +206,10 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="about_button">
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="relief">none</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_about_button_enter_notify_event" swapped="no"/>
@@ -270,10 +270,10 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkRadioButton" id="radiobutton_lilo">
                 <property name="label">LiLo</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
@@ -288,10 +288,10 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkRadioButton" id="radiobutton_grub2">
                 <property name="label">Grub2</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">radiobutton_lilo</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
@@ -464,11 +464,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="up_button">
+                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_up_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image5">
@@ -494,11 +494,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                             <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                             <child>
                               <object class="GtkButton" id="down_button">
+                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_action_appearance">False</property>
                                 <signal name="clicked" handler="on_down_button_clicked" swapped="no"/>
                                 <child>
                                   <object class="GtkImage" id="image3">
@@ -535,50 +535,42 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkEventBox" id="undo_eventbox">
+                      <object class="GtkButton" id="lilo_undo_button">
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
-                        <signal name="enter-notify-event" handler="on_undo_eventbox_enter_notify_event" swapped="no"/>
+                        <property name="sensitive">False</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <signal name="clicked" handler="on_lilo_undo_button_clicked" swapped="no"/>
                         <child>
-                          <object class="GtkButton" id="undo_button">
+                          <object class="GtkHBox" id="hbox4">
                             <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
-                            <signal name="clicked" handler="on_undo_button_clicked" swapped="no"/>
+                            <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkHBox" id="hbox4">
+                              <object class="GtkImage" id="lilo_undo_img">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <child>
-                                  <object class="GtkImage" id="image4">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="stock">gtk-revert-to-saved</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="undo_label">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">_Undo configuration</property>
-                                    <property name="use_markup">True</property>
-                                    <property name="use_underline">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
+                                <property name="stock">gtk-revert-to-saved</property>
                               </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="lilo_undo_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">_Undo configuration</property>
+                                <property name="use_markup">True</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
                             </child>
                           </object>
                         </child>
@@ -590,50 +582,42 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEventBox" id="edit_eventbox">
+                      <object class="GtkButton" id="lilo_edit_button">
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
-                        <signal name="enter-notify-event" handler="on_edit_eventbox_enter_notify_event" swapped="no"/>
+                        <property name="sensitive">False</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <signal name="clicked" handler="on_lilo_edit_button_clicked" swapped="no"/>
                         <child>
-                          <object class="GtkButton" id="edit_button">
+                          <object class="GtkHBox" id="hbox1">
                             <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
-                            <signal name="clicked" handler="on_edit_button_clicked" swapped="no"/>
+                            <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkHBox" id="hbox1">
+                              <object class="GtkImage" id="lilo_edit_img">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <child>
-                                  <object class="GtkImage" id="image1">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="stock">gtk-edit</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="edit_label">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">_Edit configuration</property>
-                                    <property name="use_markup">True</property>
-                                    <property name="use_underline">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
+                                <property name="stock">gtk-edit</property>
                               </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="lilo_edit_label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">_Edit configuration</property>
+                                <property name="use_markup">True</property>
+                                <property name="use_underline">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
                             </child>
                           </object>
                         </child>
@@ -709,6 +693,62 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               </packing>
             </child>
             <child>
+              <object class="GtkHButtonBox" id="hbuttonbox2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="layout_style">center</property>
+                <child>
+                  <object class="GtkButton" id="grub2_edit_button">
+                    <property name="use_action_appearance">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <child>
+                      <object class="GtkHBox" id="hbox5">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkImage" id="grub2_edit_img">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="stock">gtk-edit</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="grub2_edit_label">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Edit configuration</property>
+                            <property name="use_markup">True</property>
+                            <property name="use_underline">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="filler_grub2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -716,7 +756,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
@@ -735,12 +775,12 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <child>
               <object class="GtkButton" id="button_quit">
                 <property name="label">gtk-quit</property>
+                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="has_focus">True</property>
                 <property name="can_default">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="enter-notify-event" handler="on_button_quit_enter_notify_event" swapped="no"/>
@@ -760,11 +800,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <signal name="enter-notify-event" handler="on_execute_eventbox_enter_notify_event" swapped="no"/>
                 <child>
                   <object class="GtkButton" id="execute_button">
+                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="use_action_appearance">False</property>
                     <signal name="clicked" handler="on_execute_button_clicked" swapped="no"/>
                     <child>
                       <object class="GtkHBox" id="hbox2">

@@ -65,9 +65,10 @@ boot partitions:{boot_partitions}
     self.LabelTreeViewColumn = builder.get_object("label_treeviewcolumn")
     self.UpButton = builder.get_object("up_button")
     self.DownButton = builder.get_object("down_button")
-    self.UndoButton = builder.get_object("undo_button")
-    self.EditButton = builder.get_object("edit_button")
+    self.LiloUndoButton = builder.get_object("lilo_undo_button")
+    self.LiloEditButton = builder.get_object("lilo_edit_button")
     self.Grub2Part = builder.get_object("part_grub2")
+    self.Grub2EditButton = builder.get_object("grub2_edit_button")
     self.ComboBoxPartition = builder.get_object("combobox_partition")
     self.ComboBoxPartitionEntry = self.ComboBoxPartition.get_internal_child(builder, "entry")
     self._add_combobox_cell_renderer(self.ComboBoxPartition, 2)
@@ -339,7 +340,7 @@ click on this button to install your bootloader."))
     else:
       self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
 
-  def on_edit_button_clicked(self, widget, data=None):
+  def on_lilo_edit_button_clicked(self, widget, data=None):
     lilocfg = self._lilo.getConfigurationPath()
     if not os.path.exists(lilocfg):
       self._custom_lilo = True
@@ -351,7 +352,7 @@ click on this button to install your bootloader."))
       except:
         self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
 
-  def on_undo_button_clicked(self, widget, data=None):
+  def on_lilo_undo_button_clicked(self, widget, data=None):
     lilocfg = self._lilo.getConfigurationPath()
     if os.path.exists(lilocfg):
       os.remove(lilocfg)
@@ -361,6 +362,9 @@ click on this button to install your bootloader."))
   def on_combobox_partition_changed(self, widget, data=None):
     self.cfg.cur_boot_partition = self.ComboBoxPartitionEntry.get_text()
     self.update_buttons()
+  
+  def on_grub2_edit_button_clicked(self, widget, data=None):
+    pass
 
   def update_buttons(self):
     install_ok = False
@@ -381,8 +385,8 @@ click on this button to install your bootloader."))
     self.BootPartitionTreeview.set_sensitive(not self._custom_lilo)
     self.UpButton.set_sensitive(not self._editing and multiple)
     self.DownButton.set_sensitive(not self._editing and multiple)
-    self.UndoButton.set_sensitive(not self._editing and self._custom_lilo)
-    self.EditButton.set_sensitive(not self._editing and install_ok)
+    self.LiloUndoButton.set_sensitive(not self._editing and self._custom_lilo)
+    self.LiloEditButton.set_sensitive(not self._editing and install_ok)
     self.ExecuteButton.set_sensitive(not self._editing and install_ok)
 
   def on_execute_button_clicked(self, widget, data=None):
