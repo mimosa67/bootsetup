@@ -51,6 +51,8 @@ boot partitions:{boot_partitions}
     self.AboutDialog.set_copyright(__copyright__)
     self.Window = builder.get_object("bootsetup_main")
     self.LabelContextHelp = builder.get_object("label_context_help")
+    self.RadioNone = builder.get_object("radiobutton_none")
+    self.RadioNone.hide()
     self.RadioLilo = builder.get_object("radiobutton_lilo")
     self.RadioGrub2 = builder.get_object("radiobutton_grub2")
     self.ComboBoxMbr = builder.get_object("combobox_mbr")
@@ -160,6 +162,13 @@ click on this button to install your bootloader."))
     elif self.cfg.cur_bootloader == 'grub2':
       self.RadioGrub2.activate()
       self.Window.set_focus(self.RadioGrub2)
+    else:
+      self.RadioNone.activate()
+      self._grub2 = None
+      self._lilo = None
+      self.LiloPart.hide()
+      self.Grub2Part.hide()
+      self.Window.set_focus(self.RadioLilo)
     self.DiskListStore.clear()
     self.PartitionListStore.clear()
     self.BootPartitionListStore.clear()
@@ -364,11 +373,26 @@ click on this button to install your bootloader."))
     self.update_buttons()
   
   def on_grub2_edit_button_clicked(self, widget, data=None):
-    pass
+    partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
+    if sltl.isMounted(partition):
+      mp = sltl.getMountPoint(partition)
+      doumount = False
+    else:
+      mp = sltl.mountDevice(partition)
+      doumount = True
+    grub2cfg = os.path.join(mp, u"etc/default/grub")
+    if os.path.exists(grub2cfg):
+      try:
+        sltl.execCall(['xdg-open', grub2cfg], shell=False, env=None)
+      except:
+        self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the Grub2 default configuration.\n"))
+    if doumount:
+      sltl.umountDevice(mp)
 
   def update_buttons(self):
     install_ok = False
     multiple = False
+    grub2_edit_ok = False
     if self.cfg.cur_mbr_device and os.path.exists("/dev/{0}".format(self.cfg.cur_mbr_device)) and sltl.getDiskInfo(self.cfg.cur_mbr_device):
       if self.cfg.cur_bootloader == 'lilo' and not self._editing:
         if len(self.BootPartitionListStore) > 1:
@@ -379,6 +403,17 @@ click on this button to install your bootloader."))
       elif self.cfg.cur_bootloader == 'grub2':
         if self.cfg.cur_boot_partition and os.path.exists("/dev/{0}".format(self.cfg.cur_boot_partition)) and sltl.getPartitionInfo(self.cfg.cur_boot_partition):
           install_ok = True
+        if install_ok:
+          partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
+          if sltl.isMounted(partition):
+            mp = sltl.getMountPoint(partition)
+            doumount = False
+          else:
+            mp = sltl.mountDevice(partition)
+            doumount = True
+          grub2_edit_ok = os.path.exists(os.path.join(mp, u"etc/default/grub"))
+          if doumount:
+            sltl.umountDevice(mp)
     self.RadioLilo.set_sensitive(not self._editing)
     self.RadioGrub2.set_sensitive(not self._editing)
     self.ComboBoxMbr.set_sensitive(not self._editing)
@@ -387,6 +422,7 @@ click on this button to install your bootloader."))
     self.DownButton.set_sensitive(not self._editing and multiple)
     self.LiloUndoButton.set_sensitive(not self._editing and self._custom_lilo)
     self.LiloEditButton.set_sensitive(not self._editing and install_ok)
+    self.Grub2EditButton.set_sensitive(grub2_edit_ok)
     self.ExecuteButton.set_sensitive(not self._editing and install_ok)
 
   def on_execute_button_clicked(self, widget, data=None):

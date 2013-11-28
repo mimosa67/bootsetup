@@ -245,7 +245,7 @@ class WidgetWrapMore(More, WidgetWrap):
   def render(self, size, focus = False):
     return self._render_with_attr(size, focus)
   def selectable(self):
-    return self._w.selectable()
+    return self._w.selectable() and self.sensitive
   def _can_gain_focus(self):
     if isinstance(self._w, FocusEventWidget):
       return self._w._can_gain_focus()
@@ -271,7 +271,7 @@ class WidgetDecorationMore(More, WidgetDecoration):
   def render(self, size, focus = False):
     return self._render_with_attr(size, focus)
   def selectable(self):
-    return self._original_widget.selectable()
+    return self._original_widget.selectable() and self.sensitive
   def _can_gain_focus(self):
     if isinstance(self._original_widget, FocusEventWidget):
       return self._original_widget._can_gain_focus()
@@ -420,7 +420,7 @@ class PileMore(More, Pile):
     More.__init__(self)
     Pile.__init__(self, widget_list, focus_item)
   def selectable(self):
-    return Pile.selectable(self)
+    return Pile.selectable(self) and self.sensitive
   def keypress(self, size, key):
     """
     Pass the keypress to the widget in focus.
@@ -502,7 +502,7 @@ class ColumnsMore(More, Columns):
     More.__init__(self)
     Columns.__init__(self, widget_list, dividechars, focus_column, min_width, box_columns)
   def selectable(self):
-    return Columns.selectable(self)
+    return Columns.selectable(self) and self.sensitive
   def set_focus_column(self, num):
     """Set the column in focus by its index in self.widget_list."""
     ok = True
@@ -579,7 +579,7 @@ class GridFlowMore(More, GridFlow):
     More.__init__(self)
     GridFlow.__init__(self, cells, cell_width, h_sep, v_sep, align)
   def selectable(self):
-    return GridFlow.selectable(self)
+    return GridFlow.selectable(self) and self.sensitive
   def generate_display_widget(self, size):
     """
     Actually generate display widget (ignoring cache)
@@ -663,7 +663,7 @@ class OverlayMore(More, Overlay):
     More.__init__(self)
     Overlay.__init__(self, top_w, bottom_w, align, width, valign, height, min_width, min_height)
   def selectable(self):
-    return Overlay.selectable(self)
+    return Overlay.selectable(self) and self.sensitive
   def gain_focus(self):
     return self._gain_focus_with_subwidget(self.top_w)
   def loose_focus(self):
@@ -730,33 +730,38 @@ class ListBoxMore(More, ListBox):
 class LineBoxMore(WidgetDecorationMore, LineBox):
   def __init__(self, original_widget, title = "", tlcorner = u'┌', tline = u'─', lline = u'│', trcorner = u'┐', blcorner = u'└', rline = u'│', bline = u'─', brcorner = u'┘'):
     """See LineBox"""
-    tline, bline = Divider(tline), Divider(bline)
-    lline, rline = SolidFill(lline), SolidFill(rline)
-    tlcorner, trcorner = Text(tlcorner), Text(trcorner)
-    blcorner, brcorner = Text(blcorner), Text(brcorner)
-    self.title_widget = Text(self.format_title(title))
+    self._tline, self._bline = AttrMapMore(Divider(tline), None), AttrMapMore(Divider(bline), None)
+    self._lline, self._rline = AttrMapMore(SolidFill(lline), None), AttrMapMore(SolidFill(rline), None)
+    self._tlcorner, self._trcorner = TextMore(tlcorner), TextMore(trcorner)
+    self._blcorner, self._brcorner = TextMore(blcorner), TextMore(brcorner)
+    self.title_widget = TextMore(self.format_title(title))
     self.tline_widget = ColumnsMore([
-      tline,
+      self._tline,
       ('flow', self.title_widget),
-      tline,
+      self._tline,
     ])
     top = ColumnsMore([
-      ('fixed', 1, tlcorner),
+      ('fixed', 1, self._tlcorner),
       self.tline_widget,
-      ('fixed', 1, trcorner)
+      ('fixed', 1, self._trcorner)
     ])
     middle = ColumnsMore([
-      ('fixed', 1, lline),
+      ('fixed', 1, self._lline),
       original_widget,
-      ('fixed', 1, rline),
+      ('fixed', 1, self._rline),
     ], box_columns = [0, 2], focus_column = 1)
     bottom = ColumnsMore([
-      ('fixed', 1, blcorner), bline, ('fixed', 1, brcorner)
+      ('fixed', 1, self._blcorner), self._bline, ('fixed', 1, self._brcorner)
     ])
     pile = PileMore([('flow', top), middle, ('flow', bottom)], focus_item = 1)
     WidgetDecorationMore.__init__(self, original_widget)
     WidgetWrap.__init__(self, pile)
   def render(self, size, focus = False):
+    for w in (self._tline, self._bline, self._lline, self._rline, self._tlcorner, self._trcorner, self._blcorner, self._brcorner, self.title_widget):
+      if self.sensitive:
+        w.attr = self.attr[0]
+      else:
+        w.attr = self.attr[1]
     return self.canvas_with_attr(LineBox.render(self, size, focus), focus)
 
 class PopUpLauncherMore(WidgetDecorationMore, PopUpLauncher):

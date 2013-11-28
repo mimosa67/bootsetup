@@ -28,11 +28,11 @@ class GatherCurses:
   _palette = [
       ('body', 'light gray', 'black'),
       ('header', 'dark blue', 'light gray'),
-      ('footer', 'light green', 'black', 'bold'),
-      ('footer_key', 'yellow', 'black', 'bold'),
-      ('strong', 'white', 'black', 'bold'),
+      ('footer', 'light green', 'black'),
+      ('footer_key', 'yellow', 'black'),
+      ('strong', 'white', 'black'),
       ('focusable', 'light green', 'black'),
-      ('unfocusable', 'dark gray', 'black'),
+      ('unfocusable', 'dark blue', 'black'),
       ('focus', 'black', 'dark green'),
       ('focus_edit', 'yellow', 'black'),
       ('focus_icon', 'yellow', 'black'),
@@ -50,6 +50,7 @@ class GatherCurses:
   _grub2 = None
   _editing = False
   _custom_lilo = False
+  _grub2_cfg = False
   _liloMaxChars = 15
 
   def __init__(self, bootsetup, version, bootloader = None, target_partition = None, is_test = False, use_test_data = False):
@@ -74,8 +75,10 @@ boot partitions:{boot_partitions}
     self._loop = urwidm.MainLoop(self._view, self._palette, handle_mouse = True, unhandled_input = self._handleKeys, pop_ups = True)
     if self.cfg.cur_bootloader == 'lilo':
       self._radioLiLo.set_state(True)
+      self._view.body.set_focus(self._mbrDeviceSectionPosition)
     elif self.cfg.cur_bootloader == 'grub2':
       self._radioGrub2.set_state(True)
+      self._view.body.set_focus(self._mbrDeviceSectionPosition)
     self._loop.run()
   
   def _infoDialog(self, message):
@@ -176,6 +179,7 @@ a boot menu if several operating systems are available on the same computer.")
     installSection = self._createCenterButtonsWidget([btnInstall])
     # body
     bodyList = [urwidm.Divider(), txtIntro, urwidm.Divider('─', bottom = 1), bootloaderTypeSection, mbrDeviceSection, urwidm.Divider(), self._bootloaderSection, urwidm.Divider('─', top = 1, bottom = 1), installSection]
+    self._mbrDeviceSectionPosition = 4
     body = urwidm.ListBoxMore(urwidm.SimpleListWalker(bodyList))
     body.attr = 'body'
     frame = urwidm.FrameMore(body, header, footer, focus_part = 'body')
@@ -192,20 +196,22 @@ a boot menu if several operating systems are available on the same computer.")
       listDevTitle = _("Partition")
       listFSTitle = _("File system")
       listLabelTitle = _("Boot menu label")
-      listDev = [urwidm.Text(listDevTitle)]
-      listFS = [urwidm.Text(listFSTitle)]
-      listType = [urwidm.Text(_("Operating system"))]
-      listLabel = [urwidm.Text(listLabelTitle)]
-      listAction = [urwidm.Text("")]
+      listDev = [urwidm.TextMore(listDevTitle)]
+      listFS = [urwidm.TextMore(listFSTitle)]
+      listType = [urwidm.TextMore(_("Operating system"))]
+      listLabel = [urwidm.TextMore(listLabelTitle)]
+      listAction = [urwidm.TextMore("")]
+      for l in (listDev, listFS, listType, listLabel, listAction):
+        l[0].sensitive_attr = 'strong'
       self._labelPerDevice = {}
       for p in self.cfg.boot_partitions:
         dev = p[0]
         fs = p[1]
         ostype = p[3]
         label = re.sub(r'[()]', '', re.sub(r'_\(loader\)', '', re.sub(' ', '_', p[4]))) # lilo does not like spaces and pretty print the label
-        listDev.append(urwidm.Text(dev))
-        listFS.append(urwidm.Text(fs))
-        listType.append(urwidm.Text(ostype))
+        listDev.append(urwidm.TextMore(dev))
+        listFS.append(urwidm.TextMore(fs))
+        listType.append(urwidm.TextMore(ostype))
         self._labelPerDevice[dev] = label
         editLabel = self._createEdit(edit_text = label, wrap = urwidm.CLIP)
         urwidm.connect_signal(editLabel, 'change', self._onLabelChange, dev)
@@ -218,10 +224,14 @@ a boot menu if several operating systems are available on the same computer.")
       colLabel = urwidm.PileMore(listLabel)
       colAction = urwidm.PileMore(listAction)
       self._liloTable = urwidm.ColumnsMore([('fixed', max(6, len(listDevTitle)), colDev), ('fixed', max(6, len(listFSTitle)), colFS), colType, ('fixed', max(self._liloMaxChars + 1, len(listLabelTitle)), colLabel), ('fixed', 11, colAction)], dividechars = 1)
-      table = urwidm.LineBoxMore(self._liloTable)
-      btnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editLiLoConf)
-      btnCancel = self._createButton(_("_Undo configuration").replace("_", ""), on_press = self._cancelLiLoConf)
-      pile = urwidm.PileMore([table, self._createCenterButtonsWidget([btnEdit, btnCancel])])
+      self._liloTableLines = urwidm.LineBoxMore(self._liloTable)
+      self._liloTableLines.sensitive_attr = "strong"
+      self._liloTableLines.unsensitive_attr = "unfocusable"
+      self._liloBtnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editLiLoConf)
+      self._liloBtnCancel = self._createButton(_("_Undo configuration").replace("_", ""), on_press = self._cancelLiLoConf)
+      self._liloButtons = self._createCenterButtonsWidget([self._liloBtnEdit, self._liloBtnCancel])
+      pile = urwidm.PileMore([self._liloTableLines, self._liloButtons])
+      self._updateLiLoButtons()
       return pile
     elif self.cfg.cur_bootloader == 'grub2':
       comboBox = self._createComboBox(_("Install Grub2 files on:"), self.cfg.partitions)
@@ -356,13 +366,29 @@ a boot menu if several operating systems are available on the same computer.")
         except:
           pass
       if not launched:
+        self._custom_lilo = False
         self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
+    self._updateLiLoButtons()
 
   def _cancelLiLoConf(self, button):
     lilocfg = self._lilo.getConfigurationPath()
     if os.path.exists(lilocfg):
       os.remove(lilocfg)
     self._custom_lilo = False
+    self._updateLiLoButtons()
+ 
+  def _set_sensitive_rec(self, w, state):
+    w.sensitive = state
+    if hasattr(w, "widget_list"):
+      for w2 in w.widget_list:
+        self._set_sensitive_rec(w2, state)
+    elif hasattr(w, "cells"):
+      for w2 in w.cells:
+        self._set_sensitive_rec(w2, state)
+  def _updateLiLoButtons(self):
+    self._set_sensitive_rec(self._liloTable, not self._custom_lilo)
+    self._liloTableLines.sensitive = not self._custom_lilo
+    self._updateScreen()
 
   def _onGrub2FilesChange(self, combo, partition, pos):
     if self._isDeviceValid(partition):
@@ -391,7 +417,26 @@ a boot menu if several operating systems are available on the same computer.")
     self._updateScreen()
   
   def _editGrub2Conf(self, button):
-    self._bootsetup.info_dialog(button)
+    partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
+    if sltl.isMounted(partition):
+      mp = sltl.getMountPoint(partition)
+      doumount = False
+    else:
+      mp = sltl.mountDevice(partition)
+      doumount = True
+    grub2cfg = os.path.join(mp, u"etc/default/grub")
+    launched = False
+    for editor in ('vim', 'nano'):
+      try:
+        sltl.execCall([editor, grub2cfg], shell=False, env=None)
+        launched = True
+        break
+      except:
+        pass
+    if not launched:
+      self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the Grub2 default configuration.\n"))
+    if doumount:
+      sltl.umountDevice(mp)
 
   def _onInstall(self, btnInstall):
     if self.cfg.cur_bootloader == 'lilo':

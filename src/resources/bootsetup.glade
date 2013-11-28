@@ -268,13 +268,28 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
             <property name="spacing">100</property>
             <property name="layout_style">center</property>
             <child>
+              <object class="GtkRadioButton" id="radiobutton_none">
+                <property name="use_action_appearance">False</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="active">True</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">radiobutton_lilo</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkRadioButton" id="radiobutton_lilo">
                 <property name="label">LiLo</property>
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <signal name="leave-notify-event" handler="on_leave_notify_event" swapped="no"/>
                 <signal name="clicked" handler="on_bootloader_type_clicked" swapped="no"/>
@@ -282,7 +297,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">0</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -300,7 +315,7 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
@@ -700,8 +715,11 @@ Pierrick Le Brun &lt;akuna~at~salixos~dot~org&gt;</property>
                 <child>
                   <object class="GtkButton" id="grub2_edit_button">
                     <property name="use_action_appearance">False</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_grub2_edit_button_clicked" swapped="no"/>
                     <child>
                       <object class="GtkHBox" id="hbox5">
                         <property name="visible">True</property>
