@@ -97,18 +97,19 @@ class SensitiveWidgetBehavior(object):
       focus_attr = attribute to apply when in focus, if None use attr
   """
 
-  def __init__(self, sensitive = True):
-    if hasattr(self, '_sensitive_attr'):
+  def __init__(self, state = True):
+    if hasattr(self, '_sensitive'):
       return # already initialized
-    self.set_sensitive_attr(self._default_sensitive_attr)
-    self.set_unsensitive_attr(self._default_unsensitive_attr)
-    self.set_sensitive(sensitive)
+    self._sensitive = state
+    self._sensitive_attr = self._default_sensitive_attr
+    self._unsensitive_attr = self._default_unsensitive_attr
   def get_sensitive_attr(self):
     return self._sensitive_attr
   def set_sensitive_attr(self, attr):
     if type(attr) != tuple:
       attr = (attr, attr)
     self._sensitive_attr = attr
+    self._invalidate()
   sensitive_attr = property(get_sensitive_attr, set_sensitive_attr)
   def get_unsensitive_attr(self):
     return self._unsensitive_attr
@@ -116,6 +117,7 @@ class SensitiveWidgetBehavior(object):
     if type(attr) != tuple:
       attr = (attr, attr)
     self._unsensitive_attr = attr
+    self._invalidate()
   unsensitive_attr = property(get_unsensitive_attr, set_unsensitive_attr)
   def get_attr(self):
     return (self.sensitive_attr, self.unsensitive_attr)
@@ -126,12 +128,13 @@ class SensitiveWidgetBehavior(object):
     self.set_unsensitive_attr(attr)
   attr = property(get_attr, set_attr)
   def get_sensitive(self):
-    return self._selectable
+    return self._sensitive
   def set_sensitive(self, state):
-    self._selectable = state
+    self._sensitive = state
+    self._invalidate()
   sensitive = property(get_sensitive, set_sensitive)
   def selectable(self):
-    return self.get_sensitive()
+    return self._selectable and self.sensitive
   def canvas_with_attr(self, canvas, focus = False):
     """ Taken from AttrMap """
     new_canvas = CompositeCanvas(canvas)
@@ -155,6 +158,13 @@ class More(FocusEventWidget, SensitiveWidgetBehavior):
   """
   def __init__(self, sensitive = True):
     SensitiveWidgetBehavior.__init__(self, sensitive)
+  def selectable(self):
+    """
+    Due to inheritance order, this will be the implementation of Widget,
+    pulled from FocusEventWidget that will be used.
+    So here we force to use the one from SensitiveWidgetBehavior
+    """
+    return SensitiveWidgetBehavior.selectable(self)
 
 class TextMore(More, Text):
   _default_sensitive_attr = ('body', 'body')
@@ -168,6 +178,7 @@ class EditMore(More, Edit):
   _default_sensitive_attr = ('focusable', 'focus_edit')
   def __init__(self, caption = u"", edit_text = u"", multiline = False, align = LEFT, wrap = SPACE, allow_tab = False, edit_pos = None, layout = None, mask = None):
     More.__init__(self)
+    self._selectable = True
     Edit.__init__(self, caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
   def render(self, size, focus = False):
     return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
@@ -176,6 +187,7 @@ class IntEditMore(More, IntEdit):
   _default_sensitive_attr = ('focusable', 'focus_edit')
   def __init__(self, caption = "", default = None):
     More.__init__(self)
+    self._selectable = True
     IntEdit.__init__(self, caption, default)
   def render(self, size, focus = False):
     return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
@@ -184,6 +196,7 @@ class SelectableIconMore(More, SelectableIcon):
   _default_sensitive_attr = ('focusable', 'focus_icon')
   def __init__(self, text, cursor_position = 1):
     More.__init__(self)
+    self._selectable = True
     SelectableIcon.__init__(self, text, cursor_position)
   def render(self, size, focus = False):
     return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
@@ -191,6 +204,7 @@ class SelectableIconMore(More, SelectableIcon):
 class ButtonMore(More, Button):
   def __init__(self, label, on_press = None, user_data = None):
     More.__init__(self)
+    self._selectable = True
     Button.__init__(self, label, on_press, user_data)
   def render(self, size, focus = False):
     return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
@@ -203,6 +217,7 @@ class CheckBoxMore(More, CheckBox):
     'mixed': SelectableIconMore(u"[#]") }
   def __init__(self, label, state = False, has_mixed = False, on_state_change = None, user_data = None):
     More.__init__(self)
+    self._selectable = True
     CheckBox.__init__(self, label, state, has_mixed, on_state_change, user_data)
   def render(self, size, focus = False):
     return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
@@ -215,6 +230,7 @@ class RadioButtonMore(More, RadioButton):
     'mixed': SelectableIconMore(u"(#)") }
   def __init__(self, group, label, state = "first True", on_state_change = None, user_data = None):
     More.__init__(self)
+    self._selectable = True
     RadioButton.__init__(self, group, label, state, on_state_change, user_data)
   def render(self, size, focus = False):
     return self.canvas_with_attr(self.__super.render(size, focus = focus), focus)
@@ -228,6 +244,8 @@ class WidgetWrapMore(More, WidgetWrap):
     return self.canvas_with_attr(CompositeCanvas(canvas), focus)
   def render(self, size, focus = False):
     return self._render_with_attr(size, focus)
+  def selectable(self):
+    return self._w.selectable()
   def _can_gain_focus(self):
     if isinstance(self._w, FocusEventWidget):
       return self._w._can_gain_focus()
@@ -252,6 +270,8 @@ class WidgetDecorationMore(More, WidgetDecoration):
     return self.canvas_with_attr(CompositeCanvas(canvas), focus)
   def render(self, size, focus = False):
     return self._render_with_attr(size, focus)
+  def selectable(self):
+    return self._original_widget.selectable()
   def _can_gain_focus(self):
     if isinstance(self._original_widget, FocusEventWidget):
       return self._original_widget._can_gain_focus()
@@ -329,6 +349,7 @@ class FrameMore(More, Frame):
   _filler_widget_class = FillerMore
   def __init__(self, body, header = None, footer = None, focus_part = 'body'):
     More.__init__(self)
+    self._selectable = True
     Frame.__init__(self, body, header, footer, focus_part)
   def render(self, size, focus = False):
     """Render frame and return it."""
@@ -398,6 +419,8 @@ class PileMore(More, Pile):
   def __init__(self, widget_list, focus_item = None):
     More.__init__(self)
     Pile.__init__(self, widget_list, focus_item)
+  def selectable(self):
+    return Pile.selectable(self)
   def keypress(self, size, key):
     """
     Pass the keypress to the widget in focus.
@@ -478,6 +501,8 @@ class ColumnsMore(More, Columns):
   def __init__(self, widget_list, dividechars = 0, focus_column = None, min_width = 1, box_columns = None):
     More.__init__(self)
     Columns.__init__(self, widget_list, dividechars, focus_column, min_width, box_columns)
+  def selectable(self):
+    return Columns.selectable(self)
   def set_focus_column(self, num):
     """Set the column in focus by its index in self.widget_list."""
     ok = True
@@ -553,6 +578,8 @@ class GridFlowMore(More, GridFlow):
   def __init__(self, cells, cell_width, h_sep, v_sep, align):
     More.__init__(self)
     GridFlow.__init__(self, cells, cell_width, h_sep, v_sep, align)
+  def selectable(self):
+    return GridFlow.selectable(self)
   def generate_display_widget(self, size):
     """
     Actually generate display widget (ignoring cache)
@@ -635,6 +662,8 @@ class OverlayMore(More, Overlay):
   def __init__(self, top_w, bottom_w, align, width, valign, height, min_width = None, min_height = None):
     More.__init__(self)
     Overlay.__init__(self, top_w, bottom_w, align, width, valign, height, min_width, min_height)
+  def selectable(self):
+    return Overlay.selectable(self)
   def gain_focus(self):
     return self._gain_focus_with_subwidget(self.top_w)
   def loose_focus(self):
@@ -647,6 +676,7 @@ class ListBoxMore(More, ListBox):
   _default_unsensitive_attr = 'body'
   def __init__(self, body):
     More.__init__(self)
+    self._selectable = True
     ListBox.__init__(self, body)
   def change_focus(self, size, position, offset_inset = 0, coming_from = None, cursor_coords = None, snap_rows = None):
     old_widget, old_focus_pos = self.body.get_focus()
@@ -745,6 +775,7 @@ class SelText(TextMore):
   _default_sensitive_attr = ('focusable', 'focus_edit')
   def __init__(self, markup, align = LEFT, wrap = SPACE, layout = None):
     self.__super.__init__(markup, align, wrap, layout)
+    self._selectable = True
     self.set_sensitive(True)
   def keypress(self, size, key):
     """Don't handle any keys."""
@@ -785,9 +816,9 @@ class ComboBox(PopUpLauncherMore):
         PileMore([self._listw, sepBottomCenter]),
         ('fixed', 1, PileMore([BoxAdapter(sepRight, len(items)), sepBottomRight])),
       ])
-      filler = Filler(columns)
+      filler = FillerMore(columns)
       self.__super.__init__(filler)
-      self.__super.__init__(filler)
+      self._selectable = True
       self._deco = [sepLeft, sepRight, sepBottomLeft, sepBottomRight, sepBottomCenter, self._listw]
       self.set_item_attrs(item_attrs)
     def get_size(self):
