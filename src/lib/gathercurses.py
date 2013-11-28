@@ -32,7 +32,7 @@ class GatherCurses:
       ('footer_key', 'yellow', 'black', 'bold'),
       ('strong', 'white', 'black', 'bold'),
       ('focusable', 'light green', 'black'),
-      ('unfocusable', 'brown', 'black'),
+      ('unfocusable', 'dark gray', 'black'),
       ('focus', 'black', 'dark green'),
       ('focus_edit', 'yellow', 'black'),
       ('focus_icon', 'yellow', 'black'),
@@ -84,6 +84,10 @@ boot partitions:{boot_partitions}
   def _errorDialog(self, message):
     self._bootsetup.error_dialog(message, parent = self._view)
 
+  def _updateScreen(self):
+    if self._loop and self._loop.screen._started:
+      self._loop.draw_screen()
+
   def _createComboBox(self, label, elements):
     l = [urwidm.TextMultiValues(el) if isinstance(el, list) else el for el in elements]
     comboBox = urwidm.ComboBox(label, l)
@@ -111,12 +115,8 @@ boot partitions:{boot_partitions}
     return radio
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 2, v_sep = 0):
-    maxLen = 0
-    for button in buttons:
-      if not hasattr(button, 'get_label') and hasattr(button, 'original_widget'):
-        button = button.original_widget
-      maxLen = max(maxLen, len(button.get_label()))
-    return urwidm.GridFlow(buttons, cell_width = maxLen + len('<  >'), h_sep = h_sep, v_sep = v_sep, align = "center")
+    maxLen = reduce(max, [len(b.label) for b in buttons], 0) + len(u"<  >")
+    return urwidm.GridFlowMore(buttons, maxLen, h_sep, v_sep, "center")
 
   def _createView(self):
     """
@@ -226,9 +226,9 @@ a boot menu if several operating systems are available on the same computer.")
     elif self.cfg.cur_bootloader == 'grub2':
       comboBox = self._createComboBox(_("Install Grub2 files on:"), self.cfg.partitions)
       urwidm.connect_signal(comboBox, 'change', self._onGrub2FilesChange)
+      self._grub2BtnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editGrub2Conf)
+      pile = urwidm.PileMore([comboBox, self._createCenterButtonsWidget([self._grub2BtnEdit])])
       self._onGrub2FilesChange(comboBox, comboBox.selected_item[0], None)
-      btnEdit = self._createButton(_("_Edit configuration").replace("_", ""), on_press = self._editGrub2Conf)
-      pile = urwidm.PileMore([comboBox, self._createCenterButtonsWidget([btnEdit])])
       return pile
     else:
       return urwidm.Text("")
@@ -257,9 +257,15 @@ a boot menu if several operating systems are available on the same computer.")
       self._grub2 = Grub2(self.cfg.is_test)
       self._changeBootloaderSection()
 
-  def _onMBRChange(self, combo, text, pos):
-    self.cfg.cur_mbr_device = text
-    return True
+  def _isDeviceValid(self, device):
+    return not device.startswith(u"/") and os.path.exists(os.path.join(u"/dev", device))
+
+  def _onMBRChange(self, combo, disk, pos):
+    if self._isDeviceValid(disk):
+      self.cfg.cur_mbr_device = disk
+      return True
+    else:
+      return False
 
   def _isLabelValid(self, label):
     if ' ' in label:
@@ -358,12 +364,34 @@ a boot menu if several operating systems are available on the same computer.")
       os.remove(lilocfg)
     self._custom_lilo = False
 
-  def _onGrub2FilesChange(self, combo, text, pos):
-    self.cfg.cur_boot_partition = text
-    return True
+  def _onGrub2FilesChange(self, combo, partition, pos):
+    if self._isDeviceValid(partition):
+      self.cfg.cur_boot_partition = partition
+      self._updateGrub2EditButton()
+      return True
+    else:
+      self._updateGrub2EditButton(False)
+      return False
+
+  def _updateGrub2EditButton(self, doTest = True):
+    if doTest:
+      partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
+      if sltl.isMounted(partition):
+        mp = sltl.getMountPoint(partition)
+        doumount = False
+      else:
+        mp = sltl.mountDevice(partition)
+        doumount = True
+      self._grub2_conf = os.path.exists(os.path.join(mp, u"etc/default/grub"))
+      if doumount:
+        sltl.umountDevice(mp)
+    else:
+      self._grub2_conf = False
+    self._grub2BtnEdit.sensitive = self._grub2_conf
+    self._updateScreen()
   
   def _editGrub2Conf(self, button):
-    pass
+    self._bootsetup.info_dialog(button)
 
   def _onInstall(self, btnInstall):
     if self.cfg.cur_bootloader == 'lilo':
