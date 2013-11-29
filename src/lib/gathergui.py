@@ -81,7 +81,7 @@ boot partitions:{boot_partitions}
     self.BootPartitionListStore = builder.get_object("boot_bootpartition_list_store")
     self.BootLabelListStore = builder.get_object("boot_label_list_store")
     # Initialize the contextual help box
-    self.context_intro = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
+    self.context_intro = _(u"<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
 A bootloader is required to load the main operating system of a computer and will initially display \
 a boot menu if several operating systems are available on the same computer.")
@@ -112,10 +112,20 @@ a boot menu if several operating systems are available on the same computer.")
     self.LabelContextHelp.set_markup(self.context_intro)
 
   def on_about_button_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_text(_("About BootSetup."))
+    self.LabelContextHelp.set_text(_(u"About BootSetup."))
+
+  def on_bootloader_type_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Here you can choose between LiLo or Grub2 bootloader.\n\
+Both will boot your Linux and eventually Windows.\n\
+LiLo is the old way but still works pretty good. A good choice if you have a simple setup.\n\
+Grub2 is a full-featured bootloader more robust (does not rely on blocklists)."))
+
+  def on_combobox_mbr_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Select the device that will contain your bootloader.\n\
+This is commonly the device you set your Bios to boot on."))
 
   def on_boot_partition_treeview_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("Here you must define a boot menu label for each \
+    self.LabelContextHelp.set_markup(_(u"Here you must define a boot menu label for each \
 of the operating systems that will be displayed in your bootloader menu.\n\
 Any partition for which you do not set a boot menu label will not be configured and will \
 not be displayed in the bootloader menu.\n\
@@ -123,38 +133,49 @@ If several kernels are available within one partition, the label you have chosen
 partition will be appended numerically to create multiple menu entries for each of these kernels.\n\
 Any of these settings can be edited manually in the configuration file."))
   
-  def on_up_eventbox_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("Use this arrow if you want to move the \
+  def on_up_button_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Use this arrow if you want to move the \
 selected Operating System up to a higher rank.\n\
 The partition with the highest rank will be displayed on the first line of the bootloader menu.\n\
 Any of these settings can be edited manually in the configuration file."))
 
-  def on_down_eventbox_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("Use this arrow if you want to move the \
+  def on_down_button_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Use this arrow if you want to move the \
 selected Operating System down to a lower rank.\n\
 The partition with the lowest rank will be displayed on the last line of the bootloader menu.\n\
 Any of these settings can be edited manually in the configuration file."))
 
-  def on_undo_eventbox_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("This will undo all settings (even manual modifications)."))
+  def on_lilo_undo_button_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"This will undo all settings (even manual modifications)."))
 
-  def on_edit_eventbox_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("Experienced users can \
+  def on_lilo_edit_button_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Experienced users can \
 manually edit the LiLo configuration file.\n\
 Please do not tamper with this file unless you know what you are doing and you have \
 read its commented instructions regarding chrooted paths."))
 
-  def on_button_quit_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_text(_("Exit BootSetup program."))
+  def on_combobox_partition_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Select the partition that will contain the Grub2 files.\n\
+These will be in /boot/grub/. This partition should be readable by Grub2.\n\
+It is recommanded to use your / partition, or your /boot partition if you have one."))
 
-  def on_execute_eventbox_enter_notify_event(self, widget, data=None):
-    self.LabelContextHelp.set_markup(_("Once you have defined your settings, \
+  def on_grub2_edit_button_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"You can edit the etc/default/grub file for \
+adjusting the Grub2 settings.\n\
+This will not let you choose the label or the order of the menu entries, \
+it's automatically done by Grub2."))
+
+  def on_button_quit_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_text(_(u"Exit BootSetup program."))
+
+  def on_execute_button_enter_notify_event(self, widget, data=None):
+    self.LabelContextHelp.set_markup(_(u"Once you have defined your settings, \
 click on this button to install your bootloader."))
 
 
 
   def build_data_stores(self):
-    print 'Building choice lists…',
+    print u'Building choice lists…',
     sys.stdout.flush()
     if self.cfg.cur_bootloader == 'lilo':
       self.RadioLilo.activate()
@@ -188,7 +209,7 @@ click on this button to install your bootloader."))
     self.LabelCellRendererCombo.set_property('text-column', 0)
     self.LabelCellRendererCombo.set_property('editable', True)
     self.LabelCellRendererCombo.set_property('cell_background', '#CCCCCC')
-    print ' Done'
+    print u' Done'
     sys.stdout.flush()
 
   # What to do when BootSetup logo is clicked
@@ -206,7 +227,7 @@ click on this button to install your bootloader."))
       del self._lilo
     if self._grub2:
       del self._grub2
-    print "Bye _o/"
+    print u"Bye _o/"
     gtk.main_quit()
 
   def process_gui_events(self):
@@ -254,24 +275,24 @@ click on this button to install your bootloader."))
   def on_label_cellrenderercombo_edited(self, widget, row_number, new_text):
     row_number = int(row_number)
     max_chars = 15
-    if ' ' in new_text:
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not contain spaces.\n\nPlease verify and correct.\n"))
+    if u' ' in new_text:
+      self._bootsetup.error_dialog(_(u"\nAn Operating System label should not contain spaces.\n\nPlease verify and correct.\n"))
     elif len(new_text) > max_chars:
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
+      self._bootsetup.error_dialog(_(u"\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
     else:
       model, it = self.BootPartitionTreeview.get_selection().get_selected()
       found = False
       for i, line in enumerate(model):
-        if i == row_number or line[3] == _("Set..."):
+        if i == row_number or line[3] == _(u"Set..."):
           continue
         if line[3] == new_text:
           found = True
           break
       if found:
-        self._bootsetup.error_dialog(_("You have used the same label for different Operating Systems. Please verify and correct.\n"))
+        self._bootsetup.error_dialog(_(u"You have used the same label for different Operating Systems. Please verify and correct.\n"))
       else:
         model.set_value(it, 3, new_text)
-        if new_text == _("Set..."):
+        if new_text == _(u"Set..."):
           model.set_value(it, 4, "gtk-edit")
         else:
           model.set_value(it, 4, "gtk-yes")
@@ -347,7 +368,7 @@ click on this button to install your bootloader."))
     if self.cfg.cur_boot_partition:
       self._lilo.createConfiguration(self.cfg.cur_mbr_device, self.cfg.cur_boot_partition, partitions)
     else:
-      self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
+      self._bootsetup.error_dialog(_(u"Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot entries, so cannot install LiLo.\n"))
 
   def on_lilo_edit_button_clicked(self, widget, data=None):
     lilocfg = self._lilo.getConfigurationPath()
@@ -359,7 +380,7 @@ click on this button to install your bootloader."))
       try:
         sltl.execCall(['xdg-open', lilocfg], shell=False, env=None)
       except:
-        self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
+        self._bootsetup.error_dialog(_(u"Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the LiLo configuration.\n"))
 
   def on_lilo_undo_button_clicked(self, widget, data=None):
     lilocfg = self._lilo.getConfigurationPath()
@@ -385,7 +406,7 @@ click on this button to install your bootloader."))
       try:
         sltl.execCall(['xdg-open', grub2cfg], shell=False, env=None)
       except:
-        self._bootsetup.error_dialog(_("Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the Grub2 default configuration.\n"))
+        self._bootsetup.error_dialog(_(u"Sorry, BootSetup is unable to find a suitable text editor in your system. You will not be able to manually modify the Grub2 default configuration.\n"))
     if doumount:
       sltl.umountDevice(mp)
 
@@ -393,7 +414,7 @@ click on this button to install your bootloader."))
     install_ok = False
     multiple = False
     grub2_edit_ok = False
-    if self.cfg.cur_mbr_device and os.path.exists("/dev/{0}".format(self.cfg.cur_mbr_device)) and sltl.getDiskInfo(self.cfg.cur_mbr_device):
+    if self.cfg.cur_mbr_device and os.path.exists(u"/dev/{0}".format(self.cfg.cur_mbr_device)) and sltl.getDiskInfo(self.cfg.cur_mbr_device):
       if self.cfg.cur_bootloader == 'lilo' and not self._editing:
         if len(self.BootPartitionListStore) > 1:
           multiple = True
@@ -401,7 +422,7 @@ click on this button to install your bootloader."))
           if bp[4] == "gtk-yes":
             install_ok = True
       elif self.cfg.cur_bootloader == 'grub2':
-        if self.cfg.cur_boot_partition and os.path.exists("/dev/{0}".format(self.cfg.cur_boot_partition)) and sltl.getPartitionInfo(self.cfg.cur_boot_partition):
+        if self.cfg.cur_boot_partition and os.path.exists(u"/dev/{0}".format(self.cfg.cur_boot_partition)) and sltl.getPartitionInfo(self.cfg.cur_boot_partition):
           install_ok = True
         if install_ok:
           partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
@@ -435,7 +456,7 @@ click on this button to install your bootloader."))
     self.installation_done()
 
   def installation_done(self):
-    print "Bootloader Installation Done."
-    msg = "<b>{0}</b>".format(_("Bootloader installation process completed."))
+    print u"Bootloader Installation Done."
+    msg = u"<b>{0}</b>".format(_(u"Bootloader installation process completed."))
     self._bootsetup.info_dialog(msg)
     self.gtk_main_quit(self.Window)

@@ -1255,20 +1255,21 @@ class InputDialog(Dialog2):
     """ Handle dialog exit. """
     return exitcode, self.edit.get_edit_text()
 
-class ClickCols(WidgetWrapMore):
-  """ Clickable menubar. """
-  def __init__(self, items, callback = None, keys = None):
-    cols = ColumnsMore(items)
-    self.__super.__init__(cols)
-    self.callback = callback
-    self.keys = keys
-
-  def mouse_event(self, size, event, button, x, y, focus):
-    if event == "mouse press" and self.keys and len(self.keys):
-      self.callback(self.keys[0]) # the first key is used
-
 class OptCols(WidgetWrapMore):
   """ Htop-style menubar on the bottom of the screen. """
+  class ClickCols(WidgetWrapMore):
+    """ Clickable menubar. """
+    def __init__(self, keyText, desc, attrKey, attrDesc, callback = None, keys = None):
+      items = [('fixed', len(keyText) + 1, Text((attrKey, keyText))), Text((attrDesc, desc))]
+      cols = ColumnsMore(items)
+      cols.attr = attrDesc
+      self.__super.__init__(cols)
+      self.callback = callback
+      self.keys = keys
+
+    def mouse_event(self, size, event, button, x, y, focus):
+      if event == "mouse press" and self.keys and len(self.keys):
+        self.callback(self.keys[0]) # the first key is used
   # tuples = [((key1, key2, …), desc)], on_event gets passed a key
   # handler = function passed the key of the "button" pressed
   # attrs = (attr_key, attr_desc)
@@ -1298,10 +1299,13 @@ class OptCols(WidgetWrapMore):
           key)
         if re.match(r"^[a-z]([0-9]*)$", newkey):
           newkey = newkey.upper()
+        elif re.match(r".*\+.*", newkey):
+          newkey = newkey.split("+")
+          newkey = newkey[0] + "+" + newkey[1].upper()
         newKeys[key] = newkey
       desc = cmd[1]
       keyText = u" / ".join([newKeys[key] for key in keys]) + ":"
-      col = ClickCols([('fixed', len(keyText) + 1, Text((attrs[0], keyText))), Text((attrs[1], desc))], handler, keys)
+      col = self.ClickCols(keyText, desc, attrs[0], attrs[1], handler, keys)
       textList.append(col)
     cols = ColumnsMore(textList)
     WidgetWrapMore.__init__(self, cols)

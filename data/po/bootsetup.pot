@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-11-26 17:00+0100\n"
+"POT-Creation-Date: 2013-11-29 15:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,16 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/resources/bootsetup.glade:10
+#: src/resources/bootsetup.glade:10 src/lib/gathercurses.py:244
 msgid "About BootSetup"
 msgstr ""
 
-#: src/resources/bootsetup.glade:22
+#: src/resources/bootsetup.glade:22 src/lib/gathercurses.py:234
 msgid "Helps set up a bootloader like LiLo or Grub2."
 msgstr ""
 
 #. Define your name and email here.
-#: src/resources/bootsetup.glade:44
+#: src/resources/bootsetup.glade:44 src/lib/gathercurses.py:239
 msgid "translator_name <translator@email.com>"
 msgstr ""
 
@@ -34,39 +34,40 @@ msgstr ""
 msgid "BootSetup"
 msgstr ""
 
-#: src/resources/bootsetup.glade:323 src/lib/gathercurses.py:185
+#: src/resources/bootsetup.glade:352 src/lib/gathercurses.py:259
 msgid "Install bootloader on:"
 msgstr ""
 
-#: src/resources/bootsetup.glade:389 src/lib/gathercurses.py:191
+#: src/resources/bootsetup.glade:426 src/lib/gathercurses.py:267
 msgid "Partition"
 msgstr ""
 
-#: src/resources/bootsetup.glade:401 src/lib/gathercurses.py:192
+#: src/resources/bootsetup.glade:438 src/lib/gathercurses.py:268
 msgid "File system"
 msgstr ""
 
-#: src/resources/bootsetup.glade:413 src/lib/gathercurses.py:196
+#: src/resources/bootsetup.glade:450 src/lib/gathercurses.py:272
 msgid "Operating system"
 msgstr ""
 
-#: src/resources/bootsetup.glade:426 src/lib/gathercurses.py:193
+#: src/resources/bootsetup.glade:463 src/lib/gathercurses.py:269
 msgid "Boot menu label"
 msgstr ""
 
-#: src/resources/bootsetup.glade:571 src/lib/gathercurses.py:222
+#: src/resources/bootsetup.glade:591 src/lib/gathercurses.py:312
 msgid "_Undo configuration"
 msgstr ""
 
-#: src/resources/bootsetup.glade:626 src/lib/gathercurses.py:221
+#: src/resources/bootsetup.glade:640 src/resources/bootsetup.glade:774
+#: src/lib/gathercurses.py:309 src/lib/gathercurses.py:324
 msgid "_Edit configuration"
 msgstr ""
 
-#: src/resources/bootsetup.glade:679 src/lib/gathercurses.py:226
+#: src/resources/bootsetup.glade:697 src/lib/gathercurses.py:320
 msgid "Install Grub2 files on:"
 msgstr ""
 
-#: src/resources/bootsetup.glade:789 src/lib/gathercurses.py:174
+#: src/resources/bootsetup.glade:874 src/lib/gathercurses.py:199
 msgid "_Install bootloader"
 msgstr ""
 
@@ -98,23 +99,24 @@ msgstr ""
 msgid "ERROR"
 msgstr ""
 
-#: src/lib/gathercurses.py:143
+#: src/lib/gathercurses.py:165 src/lib/gathercurses.py:233
 msgid "BootSetup curses, version {ver}"
 msgstr ""
 
-#: src/lib/gathercurses.py:148
+#: src/lib/gathercurses.py:170 src/lib/gathercurses.py:217
 msgid "Help"
 msgstr ""
 
-#: src/lib/gathercurses.py:149
+#: src/lib/gathercurses.py:171
 msgid "About"
 msgstr ""
 
-#: src/lib/gathercurses.py:150
+#: src/lib/gathercurses.py:172
 msgid "Quit"
 msgstr ""
 
-#: src/lib/gathercurses.py:156 src/lib/gathergui.py:81
+#: src/lib/gathercurses.py:179 src/lib/gathercurses.py:358
+#: src/lib/gathergui.py:84
 msgid ""
 "<b>BootSetup will install a new bootloader on your computer.</b> \n"
 "\n"
@@ -123,47 +125,45 @@ msgid ""
 "available on the same computer."
 msgstr ""
 
-#: src/lib/gathercurses.py:164
+#: src/lib/gathercurses.py:187
 msgid "Bootloader:"
 msgstr ""
 
-#: src/lib/gathercurses.py:271 src/lib/gathergui.py:248
+#: src/lib/gathercurses.py:221 src/lib/gathercurses.py:248
+msgid "Close"
+msgstr ""
+
+#: src/lib/gathercurses.py:238
+msgid "Authors:"
+msgstr ""
+
+#: src/lib/gathercurses.py:238
 msgid ""
-"\n"
-"An Operating System label should not contain spaces.\n"
-"\n"
-"Please verify and correct.\n"
+"Cyrille Pontvieux <jrd~at~enialis~dot~net>\n"
+"Pierrick Le Brun <akuna~at~salixos~dot~org>"
 msgstr ""
 
-#: src/lib/gathercurses.py:275 src/lib/gathergui.py:250
+#: src/lib/gathercurses.py:239
+msgid "Translators:"
+msgstr ""
+
+#: src/lib/gathercurses.py:363 src/lib/gathergui.py:118
 msgid ""
-"\n"
-"An Operating System label should not hold more than {max} characters.\n"
-"\n"
-"Please verify and correct.\n"
+"Here you can choose between LiLo or Grub2 bootloader.\n"
+"Both will boot your Linux and eventually Windows.\n"
+"LiLo is the old way but still works pretty good. A good choice if you have a "
+"simple setup.\n"
+"Grub2 is a full-featured bootloader more robust (does not rely on "
+"blocklists)."
 msgstr ""
 
-#: src/lib/gathercurses.py:333 src/lib/gathergui.py:340
+#: src/lib/gathercurses.py:368 src/lib/gathergui.py:124
 msgid ""
-"Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot "
-"entries, so cannot install LiLo.\n"
+"Select the device that will contain your bootloader.\n"
+"This is commonly the device you set your Bios to boot on."
 msgstr ""
 
-#: src/lib/gathercurses.py:350 src/lib/gathergui.py:352
-msgid ""
-"Sorry, BootSetup is unable to find a suitable text editor in your system. "
-"You will not be able to manually modify the LiLo configuration.\n"
-msgstr ""
-
-#: src/lib/gathercurses.py:373 src/lib/gathergui.py:399
-msgid "Bootloader installation process completed."
-msgstr ""
-
-#: src/lib/gathergui.py:112
-msgid "About BootSetup."
-msgstr ""
-
-#: src/lib/gathergui.py:115
+#: src/lib/gathercurses.py:371 src/lib/gathergui.py:128
 msgid ""
 "Here you must define a boot menu label for each of the operating systems "
 "that will be displayed in your bootloader menu.\n"
@@ -175,7 +175,7 @@ msgid ""
 "Any of these settings can be edited manually in the configuration file."
 msgstr ""
 
-#: src/lib/gathergui.py:124
+#: src/lib/gathercurses.py:379 src/lib/gathergui.py:137
 msgid ""
 "Use this arrow if you want to move the selected Operating System up to a "
 "higher rank.\n"
@@ -184,7 +184,7 @@ msgid ""
 "Any of these settings can be edited manually in the configuration file."
 msgstr ""
 
-#: src/lib/gathergui.py:130
+#: src/lib/gathercurses.py:384 src/lib/gathergui.py:143
 msgid ""
 "Use this arrow if you want to move the selected Operating System down to a "
 "lower rank.\n"
@@ -193,42 +193,99 @@ msgid ""
 "Any of these settings can be edited manually in the configuration file."
 msgstr ""
 
-#: src/lib/gathergui.py:136
-msgid "This will undo all settings (even manual modifications)."
-msgstr ""
-
-#: src/lib/gathergui.py:139
+#: src/lib/gathercurses.py:389 src/lib/gathergui.py:152
 msgid ""
 "Experienced users can manually edit the LiLo configuration file.\n"
 "Please do not tamper with this file unless you know what you are doing and "
 "you have read its commented instructions regarding chrooted paths."
 msgstr ""
 
-#: src/lib/gathergui.py:145
-msgid "Exit BootSetup program."
+#: src/lib/gathercurses.py:394 src/lib/gathergui.py:149
+msgid "This will undo all settings (even manual modifications)."
 msgstr ""
 
-#: src/lib/gathergui.py:148
+#: src/lib/gathercurses.py:396 src/lib/gathergui.py:158
+msgid ""
+"Select the partition that will contain the Grub2 files.\n"
+"These will be in /boot/grub/. This partition should be readable by Grub2.\n"
+"It is recommanded to use your / partition, or your /boot partition if you "
+"have one."
+msgstr ""
+
+#: src/lib/gathercurses.py:400 src/lib/gathergui.py:163
+msgid ""
+"You can edit the etc/default/grub file for adjusting the Grub2 settings.\n"
+"This will not let you choose the label or the order of the menu entries, "
+"it's automatically done by Grub2."
+msgstr ""
+
+#: src/lib/gathercurses.py:405 src/lib/gathergui.py:172
 msgid ""
 "Once you have defined your settings, click on this button to install your "
 "bootloader."
 msgstr ""
 
-#: src/lib/gathergui.py:255 src/lib/gathergui.py:264
+#: src/lib/gathercurses.py:450 src/lib/gathergui.py:279
+msgid ""
+"\n"
+"An Operating System label should not contain spaces.\n"
+"\n"
+"Please verify and correct.\n"
+msgstr ""
+
+#: src/lib/gathercurses.py:454 src/lib/gathergui.py:281
+msgid ""
+"\n"
+"An Operating System label should not hold more than {max} characters.\n"
+"\n"
+"Please verify and correct.\n"
+msgstr ""
+
+#: src/lib/gathercurses.py:512 src/lib/gathergui.py:371
+msgid ""
+"Sorry, BootSetup is unable to find a Linux filesystem on your choosen boot "
+"entries, so cannot install LiLo.\n"
+msgstr ""
+
+#: src/lib/gathercurses.py:530 src/lib/gathergui.py:383
+msgid ""
+"Sorry, BootSetup is unable to find a suitable text editor in your system. "
+"You will not be able to manually modify the LiLo configuration.\n"
+msgstr ""
+
+#: src/lib/gathercurses.py:597 src/lib/gathergui.py:409
+msgid ""
+"Sorry, BootSetup is unable to find a suitable text editor in your system. "
+"You will not be able to manually modify the Grub2 default configuration.\n"
+msgstr ""
+
+#: src/lib/gathercurses.py:612 src/lib/gathergui.py:460
+msgid "Bootloader installation process completed."
+msgstr ""
+
+#: src/lib/gathergui.py:115
+msgid "About BootSetup."
+msgstr ""
+
+#: src/lib/gathergui.py:169
+msgid "Exit BootSetup program."
+msgstr ""
+
+#: src/lib/gathergui.py:286 src/lib/gathergui.py:295
 msgid "Set..."
 msgstr ""
 
-#: src/lib/gathergui.py:261
+#: src/lib/gathergui.py:292
 msgid ""
 "You have used the same label for different Operating Systems. Please verify "
 "and correct.\n"
 msgstr ""
 
-#: src/lib/urwid_more.py:1183 src/lib/urwid_more.py:1201
+#: src/lib/urwid_more.py:1219 src/lib/urwid_more.py:1237
 msgid "OK"
 msgstr ""
 
-#: src/lib/urwid_more.py:1207
+#: src/lib/urwid_more.py:1243
 msgid "Cancel"
 msgstr ""
 
