@@ -4,6 +4,8 @@
 """
 Graphical BootSetup.
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2013-2014, Salix OS'
 __license__ = 'GPL2+'
 
@@ -28,7 +30,7 @@ class BootSetupGtk(BootSetup):
   def info_dialog(self, message, title = None, parent = None):
     dialog = gtk.MessageDialog(parent = parent, type = gtk.MESSAGE_INFO, buttons = gtk.BUTTONS_OK, flags = gtk.DIALOG_MODAL)
     if title:
-      msg = u"<b>{0}</b>\n\n{1}".format(unicode(title), unicode(message))
+      msg = "<b>{0}</b>\n\n{1}".format(unicode(title), unicode(message))
     else:
       msg = message
     dialog.set_markup(msg)
@@ -39,7 +41,7 @@ class BootSetupGtk(BootSetup):
   def error_dialog(self, message, title = None, parent = None):
     dialog = gtk.MessageDialog(parent = parent, type = gtk.MESSAGE_ERROR, buttons = gtk.BUTTONS_CLOSE, flags = gtk.DIALOG_MODAL)
     if title:
-      msg = u"<b>{0}</b>\n\n{1}".format(unicode(title), unicode(message))
+      msg = "<b>{0}</b>\n\n{1}".format(unicode(title), unicode(message))
     else:
       msg = message
     dialog.set_markup(msg)

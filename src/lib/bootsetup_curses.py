@@ -4,6 +4,8 @@
 """
 Curses BootSetup.
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2013-2014, Salix OS'
 __license__ = 'GPL2+'
 

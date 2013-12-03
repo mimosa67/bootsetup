@@ -4,6 +4,8 @@
 """
 Salix Live Installer library used by both the GUI and the Ncurses installers.
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2011-2013, Salix OS'
 __license__ = 'GPL2+'
 from bootloader import *

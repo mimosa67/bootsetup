@@ -4,6 +4,8 @@
 """
 Config class helps storing the configuration for the bootloader setup.
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2013-2014, Salix OS'
 __license__ = 'GPL2+'
 
@@ -36,14 +38,14 @@ class Config:
 
   def __debug(self, msg):
     if self.is_test:
-      print u"Debug: " + msg
+      print "Debug: " + msg
       with codecs.open("bootsetup.log", "a+", "utf-8") as fdebug:
-        fdebug.write(u"Debug: {0}\n".format(msg))
+        fdebug.write("Debug: {0}\n".format(msg))
 
   def _get_current_config(self):
-    print u'Gathering current configuration…',
+    print 'Gathering current configuration…',
     if self.is_test:
-      print u''
+      print ''
     sys.stdout.flush()
     if self.is_test:
       self.is_live = False
@@ -51,19 +53,19 @@ class Config:
       self.is_live = sltl.isSaLTLiveEnv()
     if self.use_test_data:
       self.disks = [
-            ['sda', u'WDC100 (100GB)'],
-            ['sdb', u'SGT350 (350GB)']
+            ['sda', 'WDC100 (100GB)'],
+            ['sdb', 'SGT350 (350GB)']
           ]
       self.partitions = [
-            ['sda1', 'ntfs', u'WinVista (20GB)'],
-            ['sda5', 'ext2', u'Salix (80GB)'],
-            ['sdb1', 'fat32', u'Data (300GB)'],
-            ['sdb2', 'ext4', u'Debian (50GB)']
+            ['sda1', 'ntfs', 'WinVista (20GB)'],
+            ['sda5', 'ext2', 'Salix (80GB)'],
+            ['sdb1', 'fat32', 'Data (300GB)'],
+            ['sdb2', 'ext4', 'Debian (50GB)']
           ]
       self.boot_partitions = [
-            ['sda5', 'ext2', 'linux', u'Salix', u'Salix 14.0'],
-            ['sda1', 'ntfs', 'chain', u'Windows', u'Vista'],
-            ['sdb2', 'ext4', 'linux', u'Debian', u'Debian 7']
+            ['sda5', 'ext2', 'linux', 'Salix', 'Salix 14.0'],
+            ['sda1', 'ntfs', 'chain', 'Windows', 'Vista'],
+            ['sdb2', 'ext4', 'linux', 'Debian', 'Debian 7']
           ]
       if not self.cur_boot_partition:
         self.cut_boot_partition = 'sda5'
@@ -72,29 +74,29 @@ class Config:
       self.partitions = []
       for disk_device in sltl.getDisks():
         di = sltl.getDiskInfo(disk_device)
-        self.disks.append([disk_device, u"{0} ({1})".format(di['model'], di['sizeHuman'])])
+        self.disks.append([disk_device, "{0} ({1})".format(di['model'], di['sizeHuman'])])
         for p in sltl.getPartitions(disk_device):
           pi = sltl.getPartitionInfo(p)
-          self.partitions.append([p, pi['fstype'], u"{0} ({1})".format(pi['label'], pi['sizeHuman'])])
+          self.partitions.append([p, pi['fstype'], "{0} ({1})".format(pi['label'], pi['sizeHuman'])])
       self.boot_partitions = []
       probes = []
       if not self.is_live:
         # os-prober doesn't want to probe for /
         slashDevice = sltl.execGetOutput(r"readlink -f $(df / | tail -n 1 | cut -d' ' -f1)")[0]
         slashFS = sltl.getFsType(re.sub(r'^/dev/', '', slashDevice))
-        self.__debug(u"Root device {0} ({1})".format(slashDevice, slashFS))
-        self.__debug(u"/usr/lib/os-probes/mounted/90linux-distro " + slashDevice + u" / " + slashFS)
-        slashDistro = sltl.execGetOutput([u'/usr/lib/os-probes/mounted/90linux-distro', slashDevice, u'/', slashFS])
+        self.__debug("Root device {0} ({1})".format(slashDevice, slashFS))
+        self.__debug("/usr/lib/os-probes/mounted/90linux-distro " + slashDevice + " / " + slashFS)
+        slashDistro = sltl.execGetOutput(['/usr/lib/os-probes/mounted/90linux-distro', slashDevice, '/', slashFS])
         if slashDistro:
           probes = slashDistro
-      self.__debug(u"Probes: " + unicode(probes))
+      self.__debug("Probes: " + unicode(probes))
       probes.extend(sltl.execGetOutput('/usr/sbin/os-prober', shell = False))
-      self.__debug(u"Probes: " + unicode(probes))
+      self.__debug("Probes: " + unicode(probes))
       for probe in probes:
         probe = unicode(probe).strip() # ensure clean line
-        if probe[0] != u'/':
+        if probe[0] != '/':
           continue
-        probe_info = probe.split(u':')
+        probe_info = probe.split(':')
         probe_dev = re.sub(r'/dev/', '', probe_info[0])
         probe_os = probe_info[1]
         probe_label = probe_info[2]
@@ -110,5 +112,5 @@ class Config:
     elif len(self.disks) > 0:
       # use the first disk.
       self.cur_mbr_device = self.disks[0][0]
-    print u' Done'
+    print ' Done'
     sys.stdout.flush()

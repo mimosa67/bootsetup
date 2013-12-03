@@ -6,6 +6,8 @@ Functions to generate fstab entries:
   - createFsTab
   - addFsTabEntry
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2011-2013, Salix OS'
 __license__ = 'GPL2+'
 from execute import *

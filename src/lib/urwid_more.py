@@ -5,6 +5,8 @@
 More widgets for Urwid
 Based on the work on curses_misc.py in Wicd.
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2013-2014, Salix OS, 2008-2009 Andrew Psaltis'
 __license__ = 'GPL2+'
 
@@ -176,7 +178,7 @@ class TextMore(More, Text):
 
 class EditMore(More, Edit):
   _default_sensitive_attr = ('focusable', 'focus_edit')
-  def __init__(self, caption = u"", edit_text = u"", multiline = False, align = LEFT, wrap = SPACE, allow_tab = False, edit_pos = None, layout = None, mask = None):
+  def __init__(self, caption = "", edit_text = "", multiline = False, align = LEFT, wrap = SPACE, allow_tab = False, edit_pos = None, layout = None, mask = None):
     More.__init__(self)
     self._selectable = True
     Edit.__init__(self, caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
@@ -212,9 +214,9 @@ class ButtonMore(More, Button):
 class CheckBoxMore(More, CheckBox):
   _default_sensitive_attr = ('focusable', 'focus_radio')
   states = {
-    True: SelectableIconMore(u"[X]"),
-    False: SelectableIconMore(u"[ ]"),
-    'mixed': SelectableIconMore(u"[#]") }
+    True: SelectableIconMore("[X]"),
+    False: SelectableIconMore("[ ]"),
+    'mixed': SelectableIconMore("[#]") }
   def __init__(self, label, state = False, has_mixed = False, on_state_change = None, user_data = None):
     More.__init__(self)
     self._selectable = True
@@ -225,9 +227,9 @@ class CheckBoxMore(More, CheckBox):
 class RadioButtonMore(More, RadioButton):
   _default_sensitive_attr = ('focusable', 'focus_radio')
   states = {
-    True: SelectableIconMore(u"(X)"),
-    False: SelectableIconMore(u"( )"),
-    'mixed': SelectableIconMore(u"(#)") }
+    True: SelectableIconMore("(X)"),
+    False: SelectableIconMore("( )"),
+    'mixed': SelectableIconMore("(#)") }
   def __init__(self, group, label, state = "first True", on_state_change = None, user_data = None):
     More.__init__(self)
     self._selectable = True
@@ -728,7 +730,7 @@ class ListBoxMore(More, ListBox):
     return self.canvas_with_attr(self.__super.render(size, focus), focus)
 
 class LineBoxMore(WidgetDecorationMore, LineBox):
-  def __init__(self, original_widget, title = "", tlcorner = u'┌', tline = u'─', lline = u'│', trcorner = u'┐', blcorner = u'└', rline = u'│', bline = u'─', brcorner = u'┘'):
+  def __init__(self, original_widget, title = "", tlcorner = '┌', tline = '─', lline = '│', trcorner = '┐', blcorner = '└', rline = '│', bline = '─', brcorner = '┘'):
     """See LineBox"""
     self._tline, self._bline = AttrMapMore(Divider(tline), None), AttrMapMore(Divider(bline), None)
     self._lline, self._rline = AttrMapMore(SolidFill(lline), None), AttrMapMore(SolidFill(rline), None)
@@ -798,11 +800,11 @@ class ComboBox(PopUpLauncherMore):
       """
       normal_attr = item_attrs[0]
       focus_attr = item_attrs[1]
-      sepLeft = AttrMapMore(SolidFill(u"│"), normal_attr)
-      sepRight = AttrMapMore(SolidFill(u"│"), normal_attr)
-      sepBottomLeft = AttrMapMore(Text(u"└"), normal_attr)
-      sepBottomRight = AttrMapMore(Text(u"┘"), normal_attr)
-      sepBottomCenter = AttrMapMore(Divider(u"─"), normal_attr)
+      sepLeft = AttrMapMore(SolidFill("│"), normal_attr)
+      sepRight = AttrMapMore(SolidFill("│"), normal_attr)
+      sepBottomLeft = AttrMapMore(Text("└"), normal_attr)
+      sepBottomRight = AttrMapMore(Text("┘"), normal_attr)
+      sepBottomCenter = AttrMapMore(Divider("─"), normal_attr)
       self._content = []
       for item in items:
         if isinstance(item, Widget):
@@ -850,7 +852,7 @@ class ComboBox(PopUpLauncherMore):
     def keypress(self, size, key):
       if key in 'esc':
         self.close()
-      if key in ('enter', u' '):
+      if key in ('enter', ' '):
         self.validate()
       else:
         return self.__super.keypress(size, key)
@@ -888,10 +890,10 @@ class ComboBox(PopUpLauncherMore):
 
   _default_sensitive_attr = ('body', '')
   _default_unsensitive_attr = ('body', '')
-  DOWN_ARROW = u"↓"
+  DOWN_ARROW = "↓"
   signals = ['displaycombo', 'change']
   
-  def __init__(self, label = u'', items = None, use_enter = True, focus_index = 0):
+  def __init__(self, label = '', items = None, use_enter = True, focus_index = 0):
     """
     label       : bit of text that preceeds the combobox.  If it is "", then ignore it
     items       : stuff to include in the combobox
@@ -926,7 +928,7 @@ class ComboBox(PopUpLauncherMore):
     self._overlay_height = len(items)
     connect_signal(self, 'displaycombo', self.displaycombo)
   def _create_cbox_widget(self):
-    return SelText(u'')
+    return SelText('')
   def _set_cbox_text(self, text):
     ok = False
     self.cbox._fromCombo = True # add a property to say that we set the text from the combo
@@ -965,7 +967,7 @@ class ComboBox(PopUpLauncherMore):
     elif index is not None and isinstance(index, basestring):
       curr_text = text
     else:
-      curr_text = u''
+      curr_text = ''
     self._set_cbox_text(curr_text)
   selected_item = property(get_selected_item, set_selected_item)
   def get_sensitive(self):
@@ -1039,7 +1041,7 @@ class ComboBoxEdit(ComboBox):
   The combo trigger on 'enter' only, disregarding the state for self.use_enter
   """
   def _create_cbox_widget(self):
-    edit = EditMore(edit_text = u'', wrap = CLIP)
+    edit = EditMore(edit_text = '', wrap = CLIP)
     connect_signal(edit, 'change', self._on_edit_change)
     return edit
   def keypress(self, size, key):
@@ -1061,7 +1063,7 @@ class TextMultiValues(SelText):
   """
   A selectable text that render multiple separated values, but which only display one value
   """
-  def __init__(self, texts, selPosition = 0, join = u' | ', align = LEFT, wrap = SPACE, layout = None):
+  def __init__(self, texts, selPosition = 0, join = ' | ', align = LEFT, wrap = SPACE, layout = None):
     assert texts
     assert isinstance(texts, list)
     assert selPosition >= 0 and selPosition < len(texts)
@@ -1216,7 +1218,7 @@ class Dialog2(WidgetWrapMore):
 class TextDialog(Dialog2):
   """ Simple dialog with text and "OK" button. """
   def __init__(self, text, height, width, header=None, align='left',
-    buttons=(_(u'OK'), 1)):
+    buttons=(_('OK'), 1)):
     l = [Text(text)]
     body = ListBoxMore(SimpleListWalker(l))
     body = AttrWrapMore(body, 'body')
@@ -1234,13 +1236,13 @@ class TextDialog(Dialog2):
 
 class InputDialog(Dialog2):
   """ Simple dialog with text and entry. """
-  def __init__(self, text, height, width, ok_name=_(u'OK'), edit_text=''):
+  def __init__(self, text, height, width, ok_name=_('OK'), edit_text=''):
     self.edit = EditMore(wrap='clip', edit_text=edit_text)
     body = ListBoxMore(SimpleListWalker([self.edit]))
     body = AttrWrapMore(body, 'editbx', 'editfc')
     Dialog2.__init__(self, text, height, width, body)
     self.frame.set_focus('body')
-    self.add_buttons([(ok_name, 0), (_(u'Cancel'), -1)])
+    self.add_buttons([(ok_name, 0), (_('Cancel'), -1)])
   def unhandled_key(self, size, k):
     """ Handle keys. """
     if k in ('up', 'page up'):
@@ -1286,16 +1288,16 @@ class OptCols(WidgetWrapMore):
       newKeys = {}
       for key in keys:
         newkey = reduce(lambda s, (f, t): s.replace(f, t), [
-          (u'ctrl ', u'Ctrl+'),
-          (u'meta ', u'Alt+'),
-          (u'left', u'←'),
-          (u'right', u'→'),
-          (u'up', u'↑'),
-          (u'down', u'↓'),
-          (u'page up', u'Page Up'),
-          (u'page down', u'Page Down'),
-          (u'esc', u'ESC'),
-          (u'enter', u'Enter')],
+          ('ctrl ', 'Ctrl+'),
+          ('meta ', 'Alt+'),
+          ('left', '←'),
+          ('right', '→'),
+          ('up', '↑'),
+          ('down', '↓'),
+          ('page up', 'Page Up'),
+          ('page down', 'Page Down'),
+          ('esc', 'ESC'),
+          ('enter', 'Enter')],
           key)
         if re.match(r"^[a-z]([0-9]*)$", newkey):
           newkey = newkey.upper()
@@ -1304,7 +1306,7 @@ class OptCols(WidgetWrapMore):
           newkey = newkey[0] + "+" + newkey[1].upper()
         newKeys[key] = newkey
       desc = cmd[1]
-      keyText = u" / ".join([newKeys[key] for key in keys]) + ":"
+      keyText = " / ".join([newKeys[key] for key in keys]) + ":"
       col = self.ClickCols(keyText, desc, attrs[0], attrs[1], handler, keys)
       textList.append(col)
     cols = ColumnsMore(textList)

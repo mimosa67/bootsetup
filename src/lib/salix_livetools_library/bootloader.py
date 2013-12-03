@@ -6,6 +6,8 @@ Function to launch the boot loader setup tool with some defaults:
   - isBootsetupAvailable
   - runBootsetup
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2011-2013, Salix OS'
 __license__ = 'GPL2+'
 from execute import *

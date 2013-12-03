@@ -13,6 +13,8 @@ assert functions:
 To pass a function, you can use lambda expression like:
   assertException(lambda: myfunction())
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2011-2013, Salix OS'
 __license__ = 'GPL2+'
 def assertTrue(expression):

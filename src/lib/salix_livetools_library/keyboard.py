@@ -11,6 +11,8 @@ Functions to handle keyboard layout:
   - setNumLockDefault
   - setIbusDefault
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2011-2013, Salix OS'
 __license__ = 'GPL2+'
 import os

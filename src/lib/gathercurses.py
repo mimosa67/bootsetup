@@ -4,6 +4,8 @@
 """
 Curses (urwid) BootSetup configuration gathering.
 """
+from __future__ import unicode_literals
+
 __copyright__ = 'Copyright 2013-2014, Salix OS'
 __license__ = 'GPL2+'
 
@@ -64,7 +66,7 @@ class GatherCurses:
     self._bootsetup = bootsetup
     self._version = version
     self.cfg = Config(bootloader, target_partition, is_test, use_test_data)
-    print u"""
+    print """
 bootloader         = {bootloader}
 target partition   = {partition}
 MBR device         = {mbr}
@@ -123,7 +125,7 @@ boot partitions:{boot_partitions}
     comboBox.cbox.sensitive_attr = ('focusable', 'focus_edit')
     return comboBox
 
-  def _createEdit(self, caption = u'', edit_text = u'', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None):
+  def _createEdit(self, caption = '', edit_text = '', multiline = False, align = 'left', wrap = 'space', allow_tab = False, edit_pos = None, layout = None, mask = None):
     edit = urwidm.EditMore(caption, edit_text, multiline, align, wrap, allow_tab, edit_pos, layout, mask)
     return edit
 
@@ -136,7 +138,7 @@ boot partitions:{boot_partitions}
     return radio
 
   def _createCenterButtonsWidget(self, buttons, h_sep = 2, v_sep = 0):
-    maxLen = reduce(max, [len(b.label) for b in buttons], 0) + len(u"<  >")
+    maxLen = reduce(max, [len(b.label) for b in buttons], 0) + len("<  >")
     return urwidm.GridFlowMore(buttons, maxLen, h_sep, v_sep, "center")
 
   def _createMainView(self):
@@ -162,7 +164,7 @@ boot partitions:{boot_partitions}
 +=======================================+
     """
     # header
-    txtTitle = urwidm.Text(_(u"BootSetup curses, version {ver}").format(ver = self._version), align = "center")
+    txtTitle = urwidm.Text(_("BootSetup curses, version {ver}").format(ver = self._version), align = "center")
     header = urwidm.PileMore([urwidm.Divider(), txtTitle, urwidm.Text('─' * (len(txtTitle.text) + 2), align = "center")])
     header.attr = 'header'
     # footer
@@ -173,10 +175,10 @@ boot partitions:{boot_partitions}
       ]
     keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
     keysColumns.attr = 'footer'
-    footer = urwidm.PileMore([urwidm.Divider(u'⎽'), keysColumns])
+    footer = urwidm.PileMore([urwidm.Divider('⎽'), keysColumns])
     footer.attr = 'footer'
     # intro
-    introHtml = _(u"<b>BootSetup will install a new bootloader on your computer.</b> \n\
+    introHtml = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
 A bootloader is required to load the main operating system of a computer and will initially display \
 a boot menu if several operating systems are available on the same computer.")
@@ -210,11 +212,11 @@ a boot menu if several operating systems are available on the same computer.")
     self._mainView = frame
   
   def _createHelpView(self):
-    bodyPile = urwidm.PileMore([urwidm.Divider(), urwidm.TextMore(u"Help")])
+    bodyPile = urwidm.PileMore([urwidm.Divider(), urwidm.TextMore("Help")])
     bodyPile.attr = 'body'
     body = urwidm.FillerMore(bodyPile, valign = "top")
     body.attr = 'body'
-    txtTitle = urwidm.Text(_(u"Help"), align = "center")
+    txtTitle = urwidm.Text(_("Help"), align = "center")
     header = urwidm.PileMore([urwidm.Divider(), txtTitle, urwidm.Text('─' * (len(txtTitle.text) + 2), align = "center")])
     header.attr = 'header'
     keys = [
@@ -222,7 +224,7 @@ a boot menu if several operating systems are available on the same computer.")
       ]
     keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
     keysColumns.attr = 'footer'
-    footer = urwidm.PileMore([urwidm.Divider(u'⎽'), keysColumns])
+    footer = urwidm.PileMore([urwidm.Divider('⎽'), keysColumns])
     footer.attr = 'footer'
     frame = urwidm.FrameMore(body, header, footer, focus_part = 'body')
     frame.attr = 'body'
@@ -230,18 +232,18 @@ a boot menu if several operating systems are available on the same computer.")
 
   def _createAboutView(self):
     divider = urwidm.Divider()
-    name = urwidm.TextMore(('strong', _(u"BootSetup curses, version {ver}").format(ver = self._version)), align = "center")
-    comments = urwidm.TextMore(('body', _(u"Helps set up a bootloader like LiLo or Grub2.")), align = "center")
-    copyright = urwidm.TextMore(('copyright', u"Copyright © 2013-2014 Salix OS"), align = "center")
-    license = urwidm.TextMore(('copyright', u"GPL v2+"), align = "center")
-    url = urwidm.TextMore(('strong', u"http://salixos.org"), align = "center")
-    authors = urwidm.TextMore(('authors', _(u"Authors:") + "\n" + _(u"Cyrille Pontvieux <jrd~at~enialis~dot~net>\nPierrick Le Brun <akuna~at~salixos~dot~org>")), align = "center")
-    translators = urwidm.TextMore(('translators', _(u"Translators:") + "\n" + _(u"translator_name <translator@email.com>")), align = "center")
+    name = urwidm.TextMore(('strong', _("BootSetup curses, version {ver}").format(ver = self._version)), align = "center")
+    comments = urwidm.TextMore(('body', _("Helps set up a bootloader like LiLo or Grub2.")), align = "center")
+    copyright = urwidm.TextMore(('copyright', "Copyright © 2013-2014 Salix OS"), align = "center")
+    license = urwidm.TextMore(('copyright', "GPL v2+"), align = "center")
+    url = urwidm.TextMore(('strong', "http://salixos.org"), align = "center")
+    authors = urwidm.TextMore(('authors', _("Authors:") + "\n" + _("Cyrille Pontvieux <jrd~at~enialis~dot~net>\nPierrick Le Brun <akuna~at~salixos~dot~org>")), align = "center")
+    translators = urwidm.TextMore(('translators', _("Translators:") + "\n" + _("translator_name <translator@email.com>")), align = "center")
     bodyPile = urwidm.PileMore([divider, name, comments, divider, copyright, license, divider, url, divider, authors, translators])
     bodyPile.attr = 'body'
     body = urwidm.FillerMore(bodyPile, valign = "top")
     body.attr = 'body'
-    txtTitle = urwidm.Text(_(u"About BootSetup"), align = "center")
+    txtTitle = urwidm.Text(_("About BootSetup"), align = "center")
     header = urwidm.PileMore([urwidm.Divider(), txtTitle, urwidm.Text('─' * (len(txtTitle.text) + 2), align = "center")])
     header.attr = 'header'
     keys = [
@@ -249,7 +251,7 @@ a boot menu if several operating systems are available on the same computer.")
       ]
     keysColumns = urwidm.OptCols(keys, self._handleKeys, attrs = ('footer_key', 'footer'))
     keysColumns.attr = 'footer'
-    footer = urwidm.PileMore([urwidm.Divider(u'⎽'), keysColumns])
+    footer = urwidm.PileMore([urwidm.Divider('⎽'), keysColumns])
     footer.attr = 'footer'
     frame = urwidm.FrameMore(body, header, footer, focus_part = 'body')
     frame.attr = 'body'
@@ -355,20 +357,20 @@ a boot menu if several operating systems are available on the same computer.")
   def _switchToContextualHelp(self):
     self._mode = 'help'
     if self._helpCtx == '':
-      txt = _(u"<b>BootSetup will install a new bootloader on your computer.</b> \n\
+      txt = _("<b>BootSetup will install a new bootloader on your computer.</b> \n\
 \n\
 A bootloader is required to load the main operating system of a computer and will initially display \
 a boot menu if several operating systems are available on the same computer.").replace("<b>", "").replace("</b>", "")
     elif self._helpCtx == 'type':
-      txt = _(u"Here you can choose between LiLo or Grub2 bootloader.\n\
+      txt = _("Here you can choose between LiLo or Grub2 bootloader.\n\
 Both will boot your Linux and eventually Windows.\n\
 LiLo is the old way but still works pretty good. A good choice if you have a simple setup.\n\
 Grub2 is a full-featured bootloader more robust (does not rely on blocklists).")
     elif self._helpCtx == 'mbr':
-      txt = _(u"Select the device that will contain your bootloader.\n\
+      txt = _("Select the device that will contain your bootloader.\n\
 This is commonly the device you set your Bios to boot on.")
     elif self._helpCtx == 'lilotable':
-      txt = _(u"Here you must define a boot menu label for each \
+      txt = _("Here you must define a boot menu label for each \
 of the operating systems that will be displayed in your bootloader menu.\n\
 Any partition for which you do not set a boot menu label will not be configured and will \
 not be displayed in the bootloader menu.\n\
@@ -376,33 +378,33 @@ If several kernels are available within one partition, the label you have chosen
 partition will be appended numerically to create multiple menu entries for each of these kernels.\n\
 Any of these settings can be edited manually in the configuration file.")
     elif self._helpCtx == 'liloup':
-      txt = _(u"Use this arrow if you want to move the \
+      txt = _("Use this arrow if you want to move the \
 selected Operating System up to a higher rank.\n\
 The partition with the highest rank will be displayed on the first line of the bootloader menu.\n\
 Any of these settings can be edited manually in the configuration file.")
     elif self._helpCtx == 'lilodown':
-      txt = _(u"Use this arrow if you want to move the \
+      txt = _("Use this arrow if you want to move the \
 selected Operating System down to a lower rank.\n\
 The partition with the lowest rank will be displayed on the last line of the bootloader menu.\n\
 Any of these settings can be edited manually in the configuration file.")
     elif self._helpCtx == 'liloedit':
-      txt = _(u"Experienced users can \
+      txt = _("Experienced users can \
 manually edit the LiLo configuration file.\n\
 Please do not tamper with this file unless you know what you are doing and you have \
 read its commented instructions regarding chrooted paths.")
     elif self._helpCtx == 'lilocancel':
-      txt = _(u"This will undo all settings (even manual modifications).")
+      txt = _("This will undo all settings (even manual modifications).")
     elif self._helpCtx == 'partition':
-      txt = _(u"Select the partition that will contain the Grub2 files.\n\
+      txt = _("Select the partition that will contain the Grub2 files.\n\
 These will be in /boot/grub/. This partition should be readable by Grub2.\n\
 It is recommanded to use your / partition, or your /boot partition if you have one.")
     elif self._helpCtx == 'grub2edit':
-      txt = _(u"You can edit the etc/default/grub file for \
+      txt = _("You can edit the etc/default/grub file for \
 adjusting the Grub2 settings.\n\
 This will not let you choose the label or the order of the menu entries, \
 it's automatically done by Grub2.")
     elif self._helpCtx == 'install':
-      txt = _(u"Once you have defined your settings, \
+      txt = _("Once you have defined your settings, \
 click on this button to install your bootloader.")
     self._helpView.body._original_widget.widget_list[1].set_text(('strong', txt))
     self._loop.widget = self._helpView
@@ -428,7 +430,7 @@ click on this button to install your bootloader.")
       self._changeBootloaderSection()
 
   def _isDeviceValid(self, device):
-    return not device.startswith(u"/") and os.path.exists(os.path.join(u"/dev", device))
+    return not device.startswith("/") and os.path.exists(os.path.join("/dev", device))
 
   def _onMBRChange(self, combo, disk, pos):
     if self._isDeviceValid(disk):
@@ -561,14 +563,14 @@ click on this button to install your bootloader.")
 
   def _updateGrub2EditButton(self, doTest = True):
     if doTest:
-      partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
+      partition = os.path.join("/dev", self.cfg.cur_boot_partition)
       if sltl.isMounted(partition):
         mp = sltl.getMountPoint(partition)
         doumount = False
       else:
         mp = sltl.mountDevice(partition)
         doumount = True
-      self._grub2_conf = os.path.exists(os.path.join(mp, u"etc/default/grub"))
+      self._grub2_conf = os.path.exists(os.path.join(mp, "etc/default/grub"))
       if doumount:
         sltl.umountDevice(mp)
     else:
@@ -577,14 +579,14 @@ click on this button to install your bootloader.")
     self._updateScreen()
   
   def _editGrub2Conf(self, button):
-    partition = os.path.join(u"/dev", self.cfg.cur_boot_partition)
+    partition = os.path.join("/dev", self.cfg.cur_boot_partition)
     if sltl.isMounted(partition):
       mp = sltl.getMountPoint(partition)
       doumount = False
     else:
       mp = sltl.mountDevice(partition)
       doumount = True
-    grub2cfg = os.path.join(mp, u"etc/default/grub")
+    grub2cfg = os.path.join(mp, "etc/default/grub")
     launched = False
     for editor in ('vim', 'nano'):
       try:
