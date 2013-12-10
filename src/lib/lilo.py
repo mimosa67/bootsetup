@@ -234,14 +234,14 @@ vga = {vga}
       section = None
       if i:
         section = """# {label} Linux section
-  root = {root}
   image = {image}
   initrd = {initrd}
+  root = {root}
 """.format(image = k, initrd = i, root = rootDevice, label = l)
       else:
         section = """# {label} Linux section
-  root = {root}
   image = {image}
+  root = {root}
 """.format(image = k, root = rootDevice, label = l)
       if fs == 'ext4':
         section += '  append = "{append} "\n'.format(append = 'rootfstype=ext4')
