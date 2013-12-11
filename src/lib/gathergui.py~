@@ -280,7 +280,7 @@ click on this button to install your bootloader."))
     if ' ' in new_text:
       self._bootsetup.error_dialog(_("\nAn Operating System label should not contain spaces.\n\nPlease verify and correct.\n"))
     elif len(new_text) > max_chars:
-      self._bootsetup.error_dialog(_("\nAn Operating System label should not be more than {max} characters long.\n\nPlease verify and correct.\n".format(max=max_chars)))
+      self._bootsetup.error_dialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max=max_chars)))
     else:
       model, it = self.BootPartitionTreeview.get_selection().get_selected()
       found = False

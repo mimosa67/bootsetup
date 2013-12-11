@@ -363,9 +363,9 @@ A bootloader is required to load the main operating system of a computer and wil
 a boot menu if several operating systems are available on the same computer.").replace("<b>", "").replace("</b>", "")
     elif self._helpCtx == 'type':
       txt = _("Here you can choose between LiLo or Grub2 bootloader.\n\
-Both will boot your Linux and (if applicable) Windows.\n\
-LiLo is the old way but still works pretty well. A good choice if you have a simple setup.\n\
-Grub2 is a full-featured bootloader and more robust (does not rely on blocklists).")
+Both will boot your Linux and eventually Windows.\n\
+LiLo is the old way but still works pretty good. A good choice if you have a simple setup.\n\
+Grub2 is a full-featured bootloader more robust (does not rely on blocklists).")
     elif self._helpCtx == 'mbr':
       txt = _("Select the device that will contain your bootloader.\n\
 This is commonly the device you set your Bios to boot on.")
@@ -453,7 +453,7 @@ click on this button to install your bootloader.")
       editLabel.sensitive_attr = ('error', 'focus_error')
       return True
     elif errorType == 'max':
-      self._errorDialog(_("\nAn Operating System label should not be more than {max} characters long.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
+      self._errorDialog(_("\nAn Operating System label should not hold more than {max} characters.\n\nPlease verify and correct.\n".format(max = self._liloMaxChars)))
       editLabel.sensitive_attr = ('error', 'focus_error')
       return True
     elif errorType == 'pass':
